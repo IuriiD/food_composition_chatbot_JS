@@ -1,0 +1,26 @@
+{
+  "name": "food_composition_botjs",
+  "version": "1.0.0",
+  "description": "Chatbot telling nutrition data for food on photo",
+  "main": "fcbot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "\u0016https://github.com/IuriiD/food_composition_chatbot_JS.git"
+  },
+  "keywords": [
+    "chatbot",
+    "nutritionix",
+    "google",
+    "vision",
+    "api",
+    "node.js"
+  ],
+  "author": "iurii.dziuban@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "^2.1.2"
+  }
+}
