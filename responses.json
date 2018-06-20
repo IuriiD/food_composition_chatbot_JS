@@ -1,0 +1,607 @@
+// query: "bread"
+// attr_ids: https://docs.google.com/spreadsheets/d/14ssR3_vFYrVAidDLJoio07guZM80SMR5nxdGpAX-1-A/edit#gid=0
+{
+  "foods": [
+    {
+      "food_name": "bread",
+      "brand_name": null,
+      "serving_qty": 1,
+      "serving_unit": "slice",
+      "serving_weight_grams": 29,
+      "nf_calories": 77.14,
+      "nf_total_fat": 0.97,
+      "nf_saturated_fat": 0.2,
+      "nf_cholesterol": 0,
+      "nf_sodium": 142.1,
+      "nf_total_carbohydrate": 14.33,
+      "nf_dietary_fiber": 0.78,
+      "nf_sugars": 1.64,
+      "nf_protein": 2.57,
+      "nf_potassium": 36.54,
+      "nf_p": 28.42,
+      "full_nutrients": [
+        {
+          "attr_id": 203,
+          "value": 2.5665
+        },
+        {
+          "attr_id": 204,
+          "value": 0.9657
+        },
+        {
+          "attr_id": 205,
+          "value": 14.3318
+        },
+        {
+          "attr_id": 207,
+          "value": 0.5742
+        },
+        {
+          "attr_id": 208,
+          "value": 77.14
+        },
+        {
+          "attr_id": 209,
+          "value": 10.7793
+        },
+        {
+          "attr_id": 210,
+          "value": 0
+        },
+        {
+          "attr_id": 211,
+          "value": 0.4553
+        },
+        {
+          "attr_id": 212,
+          "value": 0.7047
+        },
+        {
+          "attr_id": 213,
+          "value": 0
+        },
+        {
+          "attr_id": 214,
+          "value": 0.4843
+        },
+        {
+          "attr_id": 221,
+          "value": 0
+        },
+        {
+          "attr_id": 255,
+          "value": 10.5618
+        },
+        {
+          "attr_id": 262,
+          "value": 0
+        },
+        {
+          "attr_id": 263,
+          "value": 0
+        },
+        {
+          "attr_id": 268,
+          "value": 322.77
+        },
+        {
+          "attr_id": 269,
+          "value": 1.6443
+        },
+        {
+          "attr_id": 287,
+          "value": 0
+        },
+        {
+          "attr_id": 291,
+          "value": 0.783
+        },
+        {
+          "attr_id": 301,
+          "value": 41.76
+        },
+        {
+          "attr_id": 303,
+          "value": 1.0469
+        },
+        {
+          "attr_id": 304,
+          "value": 6.67
+        },
+        {
+          "attr_id": 305,
+          "value": 28.42
+        },
+        {
+          "attr_id": 306,
+          "value": 36.54
+        },
+        {
+          "attr_id": 307,
+          "value": 142.1
+        },
+        {
+          "attr_id": 309,
+          "value": 0.2146
+        },
+        {
+          "attr_id": 312,
+          "value": 0.0293
+        },
+        {
+          "attr_id": 313,
+          "value": 14.181
+        },
+        {
+          "attr_id": 315,
+          "value": 0.1554
+        },
+        {
+          "attr_id": 317,
+          "value": 6.38
+        },
+        {
+          "attr_id": 318,
+          "value": 0.29
+        },
+        {
+          "attr_id": 319,
+          "value": 0
+        },
+        {
+          "attr_id": 320,
+          "value": 0
+        },
+        {
+          "attr_id": 321,
+          "value": 0
+        },
+        {
+          "attr_id": 322,
+          "value": 0
+        },
+        {
+          "attr_id": 323,
+          "value": 0.0638
+        },
+        {
+          "attr_id": 324,
+          "value": 0
+        },
+        {
+          "attr_id": 328,
+          "value": 0
+        },
+        {
+          "attr_id": 334,
+          "value": 0
+        },
+        {
+          "attr_id": 337,
+          "value": 0
+        },
+        {
+          "attr_id": 338,
+          "value": 12.76
+        },
+        {
+          "attr_id": 401,
+          "value": 0
+        },
+        {
+          "attr_id": 404,
+          "value": 0.1546
+        },
+        {
+          "attr_id": 405,
+          "value": 0.0705
+        },
+        {
+          "attr_id": 406,
+          "value": 1.3862
+        },
+        {
+          "attr_id": 410,
+          "value": 0.1554
+        },
+        {
+          "attr_id": 415,
+          "value": 0.0252
+        },
+        {
+          "attr_id": 417,
+          "value": 32.19
+        },
+        {
+          "attr_id": 418,
+          "value": 0
+        },
+        {
+          "attr_id": 421,
+          "value": 4.234
+        },
+        {
+          "attr_id": 430,
+          "value": 0.058
+        },
+        {
+          "attr_id": 431,
+          "value": 24.94
+        },
+        {
+          "attr_id": 432,
+          "value": 7.25
+        },
+        {
+          "attr_id": 435,
+          "value": 49.59
+        },
+        {
+          "attr_id": 454,
+          "value": 29.551
+        },
+        {
+          "attr_id": 601,
+          "value": 0
+        },
+        {
+          "attr_id": 605,
+          "value": 0.0078
+        },
+        {
+          "attr_id": 606,
+          "value": 0.2024
+        },
+        {
+          "attr_id": 607,
+          "value": 0.0009
+        },
+        {
+          "attr_id": 608,
+          "value": 0
+        },
+        {
+          "attr_id": 609,
+          "value": 0.0015
+        },
+        {
+          "attr_id": 610,
+          "value": 0.0015
+        },
+        {
+          "attr_id": 611,
+          "value": 0.0038
+        },
+        {
+          "attr_id": 612,
+          "value": 0.0026
+        },
+        {
+          "attr_id": 613,
+          "value": 0.1215
+        },
+        {
+          "attr_id": 614,
+          "value": 0.0632
+        },
+        {
+          "attr_id": 615,
+          "value": 0.0023
+        },
+        {
+          "attr_id": 617,
+          "value": 0.165
+        },
+        {
+          "attr_id": 618,
+          "value": 0.4133
+        },
+        {
+          "attr_id": 619,
+          "value": 0.0481
+        },
+        {
+          "attr_id": 620,
+          "value": 0.0006
+        },
+        {
+          "attr_id": 621,
+          "value": 0
+        },
+        {
+          "attr_id": 624,
+          "value": 0.0023
+        },
+        {
+          "attr_id": 625,
+          "value": 0
+        },
+        {
+          "attr_id": 626,
+          "value": 0.0052
+        },
+        {
+          "attr_id": 627,
+          "value": 0
+        },
+        {
+          "attr_id": 628,
+          "value": 0.0029
+        },
+        {
+          "attr_id": 629,
+          "value": 0.0003
+        },
+        {
+          "attr_id": 630,
+          "value": 0
+        },
+        {
+          "attr_id": 631,
+          "value": 0
+        },
+        {
+          "attr_id": 645,
+          "value": 0.1737
+        },
+        {
+          "attr_id": 646,
+          "value": 0.4646
+        },
+        {
+          "attr_id": 652,
+          "value": 0.0009
+        },
+        {
+          "attr_id": 653,
+          "value": 0.0012
+        },
+        {
+          "attr_id": 654,
+          "value": 0.0012
+        },
+        {
+          "attr_id": 662,
+          "value": 0
+        },
+        {
+          "attr_id": 663,
+          "value": 0.0064
+        },
+        {
+          "attr_id": 664,
+          "value": 0
+        },
+        {
+          "attr_id": 670,
+          "value": 0.0003
+        },
+        {
+          "attr_id": 671,
+          "value": 0
+        },
+        {
+          "attr_id": 672,
+          "value": 0.0006
+        },
+        {
+          "attr_id": 673,
+          "value": 0.0052
+        },
+        {
+          "attr_id": 674,
+          "value": 0.1586
+        },
+        {
+          "attr_id": 676,
+          "value": 0
+        },
+        {
+          "attr_id": 685,
+          "value": 0
+        },
+        {
+          "attr_id": 687,
+          "value": 0.0006
+        },
+        {
+          "attr_id": 689,
+          "value": 0
+        },
+        {
+          "attr_id": 693,
+          "value": 0.0064
+        },
+        {
+          "attr_id": 695,
+          "value": 0.0015
+        },
+        {
+          "attr_id": 697,
+          "value": 0
+        },
+        {
+          "attr_id": 851,
+          "value": 0.0481
+        },
+        {
+          "attr_id": 852,
+          "value": 0
+        },
+        {
+          "attr_id": 853,
+          "value": 0
+        },
+        {
+          "attr_id": 858,
+          "value": 0.0015
+        }
+      ],
+      "nix_brand_name": null,
+      "nix_brand_id": null,
+      "nix_item_name": null,
+      "nix_item_id": null,
+      "upc": null,
+      "consumed_at": "2018-06-20T09:33:38+00:00",
+      "metadata": {
+        "is_raw_food": false
+      },
+      "source": 1,
+      "ndb_no": 18069,
+      "tags": {
+        "item": "white bread",
+        "measure": null,
+        "quantity": "1.0",
+        "food_group": 5,
+        "tag_id": 227
+      },
+      "alt_measures": [
+        {
+          "serving_weight": 9,
+          "measure": "slice thin, crust not eaten",
+          "seq": 9,
+          "qty": 1
+        },
+        {
+          "serving_weight": 20,
+          "measure": "slice, thin",
+          "seq": 8,
+          "qty": 1
+        },
+        {
+          "serving_weight": 12,
+          "measure": "slice crust not eaten",
+          "seq": 7,
+          "qty": 1
+        },
+        {
+          "serving_weight": 25,
+          "measure": "slice",
+          "seq": 6,
+          "qty": 1
+        },
+        {
+          "serving_weight": 30,
+          "measure": "slice, large",
+          "seq": 5,
+          "qty": 1
+        },
+        {
+          "serving_weight": 35,
+          "measure": "cup, cubes",
+          "seq": 4,
+          "qty": 1
+        },
+        {
+          "serving_weight": 45,
+          "measure": "cup, crumbs",
+          "seq": 3,
+          "qty": 1
+        },
+        {
+          "serving_weight": 28.35,
+          "measure": "oz",
+          "seq": 2,
+          "qty": 1
+        },
+        {
+          "serving_weight": 15,
+          "measure": "slice, very thin",
+          "seq": 10,
+          "qty": 1
+        },
+        {
+          "serving_weight": 29,
+          "measure": "slice",
+          "seq": 1,
+          "qty": 1
+        },
+        {
+          "serving_weight": 754,
+          "measure": "whole loaf",
+          "seq": 80,
+          "qty": 1
+        },
+        {
+          "serving_weight": 45.52,
+          "measure": "slice (1.5 oz)",
+          "seq": 81,
+          "qty": 1
+        },
+        {
+          "serving_weight": 40,
+          "measure": "cup",
+          "seq": 82,
+          "qty": 1
+        },
+        {
+          "serving_weight": 100,
+          "measure": "g",
+          "seq": null,
+          "qty": 100
+        },
+        {
+          "serving_weight": 0.83,
+          "measure": "tsp",
+          "seq": 101,
+          "qty": 1
+        },
+        {
+          "serving_weight": 2.5,
+          "measure": "tbsp",
+          "seq": 102,
+          "qty": 1
+        }
+      ],
+      "lat": null,
+      "lng": null,
+      "meal_type": 1,
+      "photo": {
+        "thumb": "https://d2xdmhkmkbyw75.cloudfront.net/227_thumb.jpg",
+        "highres": "https://d2xdmhkmkbyw75.cloudfront.net/227_highres.jpg",
+        "is_user_uploaded": false
+      },
+      "sub_recipe": null
+    }
+  ]
+}
+
+
+/*
+async function getNutrients(query) {
+    try {
+        const response = await fetch(nutrientsUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "x-app-id": keys.appID,
+                "x-app-key": keys.appKey,
+                "x-remote-user-id": 0
+            },
+            body: JSON.stringify({query: query})
+        })
+
+        if (response.status == 200) {
+            const jsonResponse = await response.json();
+            return {
+                "status": "ok",
+                "data": jsonResponse
+            };
+        } else {
+            return {
+                "status": "no match",
+                "data": "I couldn\'t match any of your foods"
+            };
+        }
+
+    } catch(error) {error => {
+        console.log(`Error: ${error}`);
+        return {
+            "status": "error",
+            "data": `Error: ${error}`
+        };
+    }
+}
+
+console.log(getNutrients("bread"));
+*/
