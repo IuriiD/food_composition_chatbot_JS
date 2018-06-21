@@ -160,7 +160,7 @@ async function caloriesSummary(food) {
 function getProtFatCarbs(allNutrients) {
     // Parses the allNutrients data (got using getNutrients()) and returns
     // the following fields: procnt, fat, chocdf, serving type, serving weight, serving quantity
-    // also calculates relative (%) contents of proteins, fats and carbohydrates
+    // also calculates relative (%) content of proteins, fats and carbohydrates
     try {
         if (allNutrients.status == "ok") {
             let food, procnt, fat, chocdf, procntRel, fatRel, chocdfRel, servingQty, servingUnit, servingWeightGrams;
@@ -212,7 +212,7 @@ function getProtFatCarbs(allNutrients) {
             }
         } else {
             // network/db access error, product not found, product found but no info on calories etc
-            throw new Error("Sorry but I failed to find info about proteins/fats/carbohydrates contents in the food you requested");
+            throw new Error("Sorry but I failed to find info about proteins/fats/carbohydrates content in the food you requested");
             /*return {
                 "status": "not found",
                 "data": `Sorry but I failed to find info about calorific value of ${food}`
@@ -220,7 +220,7 @@ function getProtFatCarbs(allNutrients) {
         }
     } catch(error) {
         console.log(`\nERROR from function getProtFatCarbs():\n${error}`);
-        throw new Error("Sorry but I failed to find info about proteins/fats/carbohydrates contents in the food you requested");
+        throw new Error("Sorry but I failed to find info about proteins/fats/carbohydrates content in the food you requested");
         /*return {
             "status": "error",
             "data": error
@@ -230,7 +230,7 @@ function getProtFatCarbs(allNutrients) {
 
 
 function kgToCoverDailyNeeds(dailyNeed, in100Grams) {
-    // Calculate daily needs (kg) of a product with given contents of some substance in 100g
+    // Calculate daily needs (kg) of a product with given content of some substance in 100g
     let eatDailyKg, eatDailySummary;
     if (in100Grams == 0) {
         eatDailySummary = "infinite quantity of";
@@ -279,18 +279,18 @@ function protFatCarbsNumbersToText(nutrData) {
                 "data": summary
             };
         } else {
-            throw new Error("Sorry but I failed to find info about proteins/fats/carbohydrates contents in the food you requested");
+            throw new Error("Sorry but I failed to find info about proteins/fats/carbohydrates content in the food you requested");
         }
     } catch(error) {
         console.log(`\nERROR from function protFatCarbsNumbersToText():\n${error}`);
-        throw new Error("Sorry but I failed to find info about proteins/fats/carbohydrates contents in the food you requested");
+        throw new Error("Sorry but I failed to find info about proteins/fats/carbohydrates content in the food you requested");
     }
 
 }
 
 
 async function protFatsCarbsSummary(food) {
-    // Connects all functions to get a summary for proteins/fats/carbohydrates contents in given food
+    // Connects all functions to get a summary for proteins/fats/carbohydrates content in given food
     try {
         let allNutrients = await getNutrients(food);
         let nutrData = await getProtFatCarbs(allNutrients);
@@ -300,19 +300,178 @@ async function protFatsCarbsSummary(food) {
         }
     } catch(error) {
         console.log(`\nERROR from function protFatsCarbsSummary():\n${error}`);
-        throw new Error("Sorry but I failed to find info about proteins/fats/carbohydrates contents in the food you requested");
+        throw new Error("Sorry but I failed to find info about proteins/fats/carbohydrates content in the food you requested");
     }
 }
-let food = "milk";
+
+
+// === Vitamins ======================================================================================================//
+function getVitamins(allNutrients) {
+    // Parses the allNutrients data (got using getNutrients()) and returns
+    // the following fields: procnt, fat, chocdf, serving type, serving weight, serving quantity
+    // also calculates relative (%) content of proteins, fats and carbohydrates
+    try {
+        if (allNutrients.status == "ok") {
+            let food, servingQty, servingUnit, servingWeightGrams, vitK_430, vitE_573, vitE_323, vitD3_326, vitD2_325,
+                vitD_328, vitD_324, vitC_401, vitB6_415, vitB12_578, vitB12_418, vitA_320, vitA_318, vitE_342, vitE_343,
+                vitE_341, vitB1_404, vitB2_405, vitA1_319, vitB5_410;
+
+            food = allNutrients.data.foods[0].food_name;
+            servingQty = allNutrients.data.foods[0].serving_qty;
+            servingUnit = allNutrients.data.foods[0].serving_unit;
+            servingWeightGrams = allNutrients.data.foods[0].serving_weight_grams;
+
+            let fullNutrients = allNutrients.data.foods[0].full_nutrients;
+
+            /*
+            319	RETOL	Retinol (A-1)	Âµg
+            320	VITA_RAE	Vitamin A, RAE	Âµg
+            318	VITA_IU	Vitamin A, IU	IU
+
+            404	THIA	Thiamin (B-1)	mg
+            405	RIBF	Riboflavin (B-2)	mg
+            410	PANTAC	Pantothenic acid (B-5)	mg
+            415	VITB6A	Vitamin B-6	mg
+            578	NULL	Vitamin B-12, added	Âµg
+            418	VITB12	Vitamin B-12	Âµg
+
+            401	VITC	Vitamin C, total ascorbic acid	mg
+
+            326	CHOCAL	Vitamin D3 (cholecalciferol)	Âµg
+            325	ERGCAL	Vitamin D2 (ergocalciferol)	Âµg
+            328	VITD	Vitamin D (D2 + D3)	Âµg
+            324	VITD	Vitamin D	IU
+
+            573	NULL	Vitamin E, added	mg
+            323	TOCPHA	Vitamin E (alpha-tocopherol)	mg
+            342	TOCPHG	Tocopherol, gamma (E)	mg
+            343	TOCPHD	Tocopherol, delta (E)	mg
+            341	TOCPHB	Tocopherol, beta (E)	mg
+
+            430	VITK1	Vitamin K (phylloquinone)	Âµg
+             */
+            for (let nutrient of fullNutrients) {
+                if (nutrient.attr_id == 430) {
+                    vitK_430 = nutrient.value;
+                } else if (nutrient.attr_id == 573) {
+                    vitE_573 = nutrient.value;
+                } else if (nutrient.attr_id == 323) {
+                    vitE_323 = nutrient.value;
+                } else if (nutrient.attr_id == 326) {
+                    vitD3_326 = nutrient.value;
+                } else if (nutrient.attr_id == 325) {
+                    vitD2_325 = nutrient.value;
+                } else if (nutrient.attr_id == 328) {
+                    vitD_328 = nutrient.value;
+                } else if (nutrient.attr_id == 324) {
+                    vitD_324 = nutrient.value;
+                } else if (nutrient.attr_id == 401) {
+                    vitC_401 = nutrient.value;
+                } else if (nutrient.attr_id == 415) {
+                    vitB6_415 = nutrient.value;
+                } else if (nutrient.attr_id == 578) {
+                    vitB12_578 = nutrient.value;
+                } else if (nutrient.attr_id == 418) {
+                    vitB12_418 = nutrient.value;
+                } else if (nutrient.attr_id == 320) {
+                    vitA_320 = nutrient.value;
+                } else if (nutrient.attr_id == 318) {
+                    vitA_318 = nutrient.value;
+                } else if (nutrient.attr_id == 342) {
+                    vitE_342 = nutrient.value;
+                } else if (nutrient.attr_id == 343) {
+                    vitE_343 = nutrient.value;
+                } else if (nutrient.attr_id == 341) {
+                    vitE_341 = nutrient.value;
+                } else if (nutrient.attr_id == 404) {
+                    vitB1_404 = nutrient.value;
+                } else if (nutrient.attr_id == 405) {
+                    vitB2_405 = nutrient.value;
+                } else if (nutrient.attr_id == 319) {
+                    vitA1_319 = nutrient.value;
+                } else if (nutrient.attr_id == 410) {
+                    vitB5_410 = nutrient.value;
+                }
+            }
+
+            return {
+                "status": "ok",
+                "data": {
+                    "food": food,
+                    "servingQty": servingQty,
+                    "servingUnit": servingUnit,
+                    "servingWeightGrams": servingWeightGrams,
+                    "vitK_430": vitK_430,
+                    "vitE_573": vitE_573,
+                    "vitE_323": vitE_323,
+                    "vitD3_326": vitD3_326,
+                    "vitD2_325": vitD2_325,
+                    "vitD_328": vitD_328,
+                    "vitD_324": vitD_324,
+                    "vitC_401": vitC_401,
+                    "vitB6_415": vitB6_415,
+                    "vitB12_578": vitB12_578,
+                    "vitB12_418": vitB12_418,
+                    "vitA_320": vitA_320,
+                    "vitA_318": vitA_318,
+                    "vitE_342": vitE_342,
+                    "vitE_343": vitE_343,
+                    "vitE_341": vitE_341,
+                    "vitB1_404": vitB1_404,
+                    "vitB2_405": vitB2_405,
+                    "vitA1_319": vitA1_319,
+                    "vitB5_410": vitB5_410
+                }
+            }
+        } else {
+            // network/db access error, product not found, product found but no info on calories etc
+            throw new Error("Sorry but I failed to find info about vitamins content in the food you requested");
+            /*return {
+                "status": "not found",
+                "data": `Sorry but I failed to find info about calorific value of ${food}`
+            };*/
+        }
+    } catch(error) {
+        console.log(`\nERROR from function getVitamins():\n${error}`);
+        throw new Error("Sorry but I failed to find info about vitamins content in the food you requested");
+        /*return {
+            "status": "error",
+            "data": error
+        }*/
+    }
+}
+
+
+async function vitaminsSummary(food) {
+    // Connects all functions to get a summary for proteins/fats/carbohydrates content in given food
+    try {
+        let allNutrients = await getNutrients(food);
+        let vitaminData = await getVitamins(allNutrients);
+        console.log(vitaminData.data);
+        return true;
+    } catch(error) {
+        console.log(`\nERROR from function protFatsCarbsSummary():\n${error}`);
+        throw new Error("Sorry but I failed to find info about vitamins content in the food you requested");
+    }
+}
+
+let food = "sd";
 /*
 caloriesSummary(food)
     .then(
         result => {console.log(result)},
         error => {console.log("Sorry but I failed to find info about calorific value for the food you requested")}
         );
-*/
+
 protFatsCarbsSummary(food)
     .then(
         result => {console.log(result)},
-        error => {console.log("Sorry but I failed to find info about proteins/fats/carbohydrates contents in the food you requested")}
+        error => {console.log("Sorry but I failed to find info about proteins/fats/carbohydrates content in the food you requested")}
+    );
+*/
+
+vitaminsSummary(food)
+    .then(
+        result => {console.log(result)},
+        error => {console.log("Sorry but I failed to find info about proteins/fats/carbohydrates content in the food you requested")}
     );
