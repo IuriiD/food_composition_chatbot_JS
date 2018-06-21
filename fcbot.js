@@ -121,7 +121,8 @@ function caloriesNumbersToText(caloriesData) {
             food = caloriesData.data.food;
             enercKCal100g = Math.floor((caloriesData.data.enercKCal * 100 / caloriesData.data.servingWeightGrams) * 100) / 100;
             enercKj100g = Math.floor((caloriesData.data.enercKj * 100 / caloriesData.data.servingWeightGrams) * 100) / 100;
-            kgToCoverDaylyEnergy = Math.round((averageDailyCalories / enercKCal100g * 0.1) * 100) / 100;
+
+            kgToCoverDaylyEnergy = kgToCoverDailyNeeds(averageDailyCalories, enercKCal100g);
 
             summary = `${food.charAt(0).toUpperCase() + food.slice(1)} contains approximately ${enercKCal100g} kcal (${enercKj100g} kj) per 100 grams or ${caloriesData.data.enercKCal} kcal (${caloriesData.data.enercKj} kj) per a standard serving (${caloriesData.data.servingQty} ${caloriesData.data.servingUnit}, ${caloriesData.data.servingWeightGrams} g).`;
             summary += `\nSo an average person would have to consume ${kgToCoverDaylyEnergy} kg of ${food} to cover his/her daily energy requirements (~2200 kilocalories)`;
@@ -245,6 +246,7 @@ function kgToCoverDailyNeeds(dailyNeed, in100Grams) {
     return eatDailySummary;
 }
 
+
 function protFatCarbsNumbersToText(nutrData) {
     // Using numbers for main nutrients content (got using getNutrients() >> getProtFatCarbs()) composes a text summary
     try {
@@ -259,10 +261,6 @@ function protFatCarbsNumbersToText(nutrData) {
             kgToCoverDaylyProt = kgToCoverDailyNeeds(proteinsDaily, protIn100g);
             kgToCoverDaylyFats = kgToCoverDailyNeeds(fatsDaily, fatsIn100g);
             kgToCoverDaylyCarbs = kgToCoverDailyNeeds(carbsDaily, carbsIn100g);
-
-            /*kgToCoverDaylyProt = Math.round((proteinsDaily / protIn100g * 0.1) * 100) / 100;
-            kgToCoverDaylyFats = Math.round((fatsDaily / fatsIn100g * 0.1) * 100) / 100;
-            kgToCoverDaylyCarbs = Math.round((carbsDaily / carbsIn100g * 0.1) * 100) / 100;*/
 
             summary = `${food.charAt(0).toUpperCase() + food.slice(1)} contains approximately (per 100 g):\n
             - proteins: ${protIn100g} g (will provide ${nutrData.data.procntRel}% of calories);\n
@@ -401,26 +399,26 @@ function getVitamins(allNutrients) {
                     "servingQty": servingQty,
                     "servingUnit": servingUnit,
                     "servingWeightGrams": servingWeightGrams,
-                    "vitK_430": vitK_430,
-                    "vitE_573": vitE_573,
-                    "vitE_323": vitE_323,
+                    "vitA_320": vitA_320,
+                    "vitA_318": vitA_318,
+                    "vitA1_319": vitA1_319,
+                    "vitB1_404": vitB1_404,
+                    "vitB2_405": vitB2_405,
+                    "vitB5_410": vitB5_410,
+                    "vitB6_415": vitB6_415,
+                    "vitB12_578": vitB12_578,
+                    "vitB12_418": vitB12_418,
+                    "vitC_401": vitC_401,
                     "vitD3_326": vitD3_326,
                     "vitD2_325": vitD2_325,
                     "vitD_328": vitD_328,
                     "vitD_324": vitD_324,
-                    "vitC_401": vitC_401,
-                    "vitB6_415": vitB6_415,
-                    "vitB12_578": vitB12_578,
-                    "vitB12_418": vitB12_418,
-                    "vitA_320": vitA_320,
-                    "vitA_318": vitA_318,
+                    "vitE_573": vitE_573,
+                    "vitE_323": vitE_323,
                     "vitE_342": vitE_342,
                     "vitE_343": vitE_343,
                     "vitE_341": vitE_341,
-                    "vitB1_404": vitB1_404,
-                    "vitB2_405": vitB2_405,
-                    "vitA1_319": vitA1_319,
-                    "vitB5_410": vitB5_410
+                    "vitK_430": vitK_430
                 }
             }
         } else {
@@ -442,6 +440,241 @@ function getVitamins(allNutrients) {
 }
 
 
+function vitaminNumbersToText(vitaminData) {
+    // Using numbers for main nutrients content (got using getNutrients() >> getProtFatCarbs()) composes a text summary
+    try {
+        if (vitaminData.status == "ok") {
+            let food, summary, vitAmcg, vitAME, vitB1, vitB2, vitB5, vitB6, vitB12, vitC, vitDmcg, vitDME, vitE, vitK;
+            let vitAmcgIn100g, vitAMEIn100g, vitB1In100g, vitB2In100g, vitB5In100g, vitB6In100g, vitB12In100g,
+                vitCIn100g, vitDmcgIn100g, vitDMEIn100g, vitEIn100g, vitKIn100g;
+
+            food = nutrData.data.food;
+
+            // Vitamin A
+            if (vitaminData.data.vitA_320) {
+                vitAmcg = vitaminData.data.vitA_320;
+            } else {
+                if (vitaminData.data.vitA1_319) {
+                    vitAmcg = vitaminData.data.vitA1_319;
+                } else {
+                    vitAmcg = 0;
+                }
+            }
+
+            if (vitaminData.data.vitA_318) {
+                vitAME = vitaminData.data.vitA_318;
+            } else {
+                vitAME = 0;
+            }
+
+            // Vitamin B1
+            vitaminData.data.vitB1_404 ? vitB1 = vitaminData.data.vitB1_404 : vitB1 = 0;
+
+            // Vitamin B2
+            vitaminData.data.vitB2_405 ? vitB2 = vitaminData.data.vitB2_405 : vitB2 = 0;
+
+            // Vitamin B5
+            vitaminData.data.vitB5_410 ? vitB5 = vitaminData.data.vitB5_410 : vitB5 = 0;
+
+            // Vitamin B6
+            vitaminData.data.vitB6_415 ? vitB6 = vitaminData.data.vitB6_415 : vitB6 = 0;
+
+            // Vitamin B12
+            if (vitaminData.data.vitB12_418) {
+                vitB12 = vitaminData.data.vitB12_418;
+            }
+            if (vitaminData.data.vitB12_578) {
+                vitB12 += vitaminData.data.vitB12_578;
+            }
+
+            // Vitamin C
+            vitaminData.data.vitC_401 ? vitC = vitaminData.data.vitC_401 : vitC = 0;
+
+            // Vitamin D
+            vitaminData.data.vitD_324 ? vitDME = vitaminData.data.vitD_324 : vitDME = 0;
+            if (vitaminData.data.vitD_328) {
+                vitDmcg = vitaminData.data.vitD_328;
+            } else {
+                vitDmcg = 0;
+                if (vitaminData.data.vitD_325) {
+                    vitDmcg = vitaminData.data.vitD_325;
+                }
+                if (vitaminData.data.vitD_326) {
+                    vitDmcg += vitaminData.data.vitD_326;
+                }
+            }
+
+            // Vitamin E
+            vitE = 0;
+
+            if (vitaminData.data.vitE_323) {
+                vitE = vitaminData.data.vitE_323;
+            }
+
+            if (vitaminData.data.vitE_573) {
+                vitE += vitaminData.data.vitE_573;
+            }
+
+            if (vitE == 0) {
+                if (vitaminData.data.vitE_341) {
+                    vitE = vitaminData.data.vitE_341;
+                }
+                if (vitaminData.data.vitE_342) {
+                    vitE += vitaminData.data.vitE_342;
+                }
+                if (vitaminData.data.vitE_343) {
+                    vitE += vitaminData.data.vitE_343;
+                }
+            }
+
+            // Vitamin K
+            vitaminData.data.vitK_430 ? vitK = vitaminData.data.vitK_430 : vitK = 0;
+
+            if (vitAmcg != 0) {
+                vitAmcgIn100g = Math.floor((vitAmcg * 100 / vitaminData.data.servingWeightGrams) * 100) / 100;
+            } else {
+                vitAmcgIn100g = 0;
+            }
+
+            if (vitAME != 0) {
+                vitAMEIn100g = Math.floor((vitAME * 100 / vitaminData.data.servingWeightGrams) * 100) / 100;
+            } else {
+                vitAMEIn100g = 0;
+            }
+
+            if (vitB1 != 0) {
+                vitB1In100g = Math.floor((vitB1 * 100 / vitaminData.data.servingWeightGrams) * 100) / 100;
+            } else {
+                vitB1In100g = 0;
+            }
+
+            if (vitB2 != 0) {
+                vitB2In100g = Math.floor((vitB2 * 100 / vitaminData.data.servingWeightGrams) * 100) / 100;
+            } else {
+                vitB2In100g = 0;
+            }
+
+            if (vitB5 != 0) {
+                vitB5In100g = Math.floor((vitB5 * 100 / vitaminData.data.servingWeightGrams) * 100) / 100;
+            } else {
+                vitB5In100g = 0;
+            }
+
+            if (vitB6 != 0) {
+                vitB6In100g = Math.floor((vitB6 * 100 / vitaminData.data.servingWeightGrams) * 100) / 100;
+            } else {
+                vitB6In100g = 0;
+            }
+
+            if (vitB12 != 0) {
+                vitB12In100g = Math.floor((vitB12 * 100 / vitaminData.data.servingWeightGrams) * 100) / 100;
+            } else {
+                vitB12In100g = 0;
+            }
+
+            if (vitC != 0) {
+                vitCIn100g = Math.floor((vitC * 100 / vitaminData.data.servingWeightGrams) * 100) / 100;
+            } else {
+                vitCIn100g = 0;
+            }
+
+            if (vitDmcg != 0) {
+                vitDmcgIn100g = Math.floor((vitDmcg * 100 / vitaminData.data.servingWeightGrams) * 100) / 100;
+            } else {
+                vitDmcgIn100g = 0;
+            }
+
+            if (vitDME != 0) {
+                vitDMEIn100g = Math.floor((vitDME * 100 / vitaminData.data.servingWeightGrams) * 100) / 100;
+            } else {
+                vitDMEIn100g = 0;
+            }
+
+            if (vitE != 0) {
+                vitEIn100g = Math.floor((vitE * 100 / vitaminData.data.servingWeightGrams) * 100) / 100;
+            } else {
+                vitEIn100g = 0;
+            }
+
+            if (vitK != 0) {
+                vitKIn100g = Math.floor((vitK * 100 / vitaminData.data.servingWeightGrams) * 100) / 100;
+            } else {
+                vitKIn100g = 0;
+            }
+
+            summary = `${food.charAt(0).toUpperCase() + food.slice(1)} contains approximately (per 100 g):\n`;
+            if (vitAmcgIn100g || vitAMEIn100g) {
+                summary += "Vitamin A: ";
+                if (vitAmcgIn100g && !vitAMEIn100g) {
+                    summary += `${vitAmcgIn100g} mcg`;
+                }
+                if (vitAMEIn100g && !vitAmcgIn100g) {
+                    summary += `${vitAMEIn100g} IE`;
+                }
+                if (vitAMEIn100g && vitAmcgIn100g) {
+                    summary += `${vitAmcgIn100g} mcg (${vitAMEIn100g} IE)`;
+                }
+            }
+
+            if (vitB1In100g) {
+                summary += `\nVitamin B1: ${vitB1In100g} mg`;
+            }
+
+            if (vitB2In100g) {
+                summary += `\nVitamin B2: ${vitB2In100g} mg`;
+            }
+
+            if (vitB5In100g) {
+                summary += `\nVitamin B5: ${vitB5In100g} mg`;
+            }
+
+            if (vitB6In100g) {
+                summary += `\nVitamin B6: ${vitB6In100g} mg`;
+            }
+
+            if (vitB12In100g) {
+                summary += `\nVitamin B12: ${vitB12In100g} mcg`;
+            }
+
+            if (vitCIn100g) {
+                summary += `\nVitamin C: ${vitCIn100g} mcg`;
+            }
+
+            if (vitDmcgIn100g || vitDMEIn100g) {
+                summary += "Vitamin D: ";
+                if (vitDmcgIn100g && !vitDMEIn100g) {
+                    summary += `${vitDmcgIn100g} mcg`;
+                }
+                if (vitDMEIn100g && !vitDmcgIn100g) {
+                    summary += `${vitDMEIn100g} IE`;
+                }
+                if (vitDMEIn100g && vitDmcgIn100g) {
+                    summary += `${vitDmcgIn100g} mcg (${vitDMEIn100g} IE)`;
+                }
+            }
+
+            if (vitEIn100g) {
+                summary += `\nVitamin E: ${vitEIn100g} mg`;
+            }
+
+            if (vitKIn100g) {
+                summary += `\nVitamin K: ${vitKIn100g} mcg`;
+            }
+
+            return {
+                "status": "ok",
+                "data": summary
+            };
+        } else {
+            throw new Error("Sorry but I failed to find vitamin data for the food you requested");
+        }
+    } catch(error) {
+        console.log(`\nERROR from function vitaminNumbersToText():\n${error}`);
+        throw new Error("Sorry but I failed to find vitamin data for the food you requested");
+    }
+
+}
+
 async function vitaminsSummary(food) {
     // Connects all functions to get a summary for proteins/fats/carbohydrates content in given food
     try {
@@ -455,7 +688,7 @@ async function vitaminsSummary(food) {
     }
 }
 
-let food = "sd";
+let food = "butter";
 /*
 caloriesSummary(food)
     .then(

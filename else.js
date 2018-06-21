@@ -1,15 +1,11 @@
-const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+const a = undefined;
+const b = 0;
 
-wait(2000).then(() => saySomething("10 seconds")).catch(failureCallback);
+if (b) {
+    console.log('True');
+} else {console.log('False')}
 
-function failureCallback() {
-    console.log('Error');
-}
-
-function saySomething() {
-    console.log('SOmething');
-}
-
+console.log(b);
 
 /*
 // Nutritionix API v1.1, GET request with filters
