@@ -1,10 +1,18 @@
 "use strict"
 
-const keys = require("./keys");
+
+const express = require("express");
 const fetch = require("node-fetch");
+const bodyParser = require("body-parser");
+const keys = require("./keys");
+const functions = require(".functions");
+const variables = require("./variables");
 
 const nutrietnsURL = "https://trackapi.nutritionix.com/v2/natural/nutrients";
 
+// ===================================================================================================================//
+// === VARIABLES =====================================================================================================//
+// ===================================================================================================================//
 const averageDailyCalories = 2200;
 const proteinsDaily = 50; // grams, http://www.mydailyintake.net/daily-intake-levels/
 const fatsDaily = 70; // grams, http://www.mydailyintake.net/daily-intake-levels/
@@ -13,6 +21,31 @@ const sugarsDaily = 90; // grams, http://www.mydailyintake.net/daily-intake-leve
 const protCalPerG = 4; // calories per 1g, http://healthyeating.sfgate.com/gram-protein-carbohydrates-contains-many-kilocalories-5978.html
 const fatCalPerG = 9; // calories per 1g, http://healthyeating.sfgate.com/gram-protein-carbohydrates-contains-many-kilocalories-5978.html
 const carbCalPerG = 4; // calories per 1g, http://healthyeating.sfgate.com/gram-protein-carbohydrates-contains-many-kilocalories-5978.html
+
+
+
+let app = express();
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+app.listen((process.env.PORT || 5000));
+
+// Server index page
+app.get("/", function (req, res) {
+    res.send("FoodCompositionBot<br>More details: <a href='https://github.com/IuriiD/food_composition_chatbot_JS'>Github</a><br><a href='http://iuriid.github.io'>Iurii Dziuban - June 2018</a>");
+});
+
+// Facebook Webhook
+// Used for verification
+app.get("/webhook", function (req, res) {
+    if (req.query["hub.verify_token"] === "foodcompositionbot1982") {
+        console.log("FoodCompositionBot: Webhook verified");
+        res.status(200).send(req.query["hub.challenge"]);
+    } else {
+        console.error("FoodCompositionBot: Verification failed. Tokens do not match.");
+        res.sendStatus(403);
+    }
+});
+
 
 // ===================================================================================================================//
 // === NUTRITIONIX (getting nutrient data) ===========================================================================//
