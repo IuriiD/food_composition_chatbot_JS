@@ -8,6 +8,5 @@
 *node_modules/
 *else/
 *.git/
-*keys.js
-*foodcontents-9c59d2b54039.json
+#*keys.js
 *.gitignore
