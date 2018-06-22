@@ -37,7 +37,7 @@ app.get("/", function (req, res) {
 // Facebook Webhook
 // Used for verification
 app.get("/webhook", function (req, res) {
-    if (req.query["hub.verify_token"] === "foodcompositionbot1982") {
+    if (req.query["hub.verify_token"] === (keys.verifyToken || process.env.verifyToken)) {
         console.log("FoodCompositionBot: Webhook verified");
         res.status(200).send(req.query["hub.challenge"]);
     } else {
@@ -57,8 +57,8 @@ async function getNutrients(food) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "x-app-id": keys.nutritionixAppID,
-                "x-app-key": keys.nutritionixAppKey,
+                "x-app-id": (keys.nutritionixAppID || process.env.nutritionixAppID),
+                "x-app-key": (keys.nutritionixAppKey || process.env.nutritionixAppKey),
                 "x-remote-user-id": 0
             },
             body: JSON.stringify({query: food})
@@ -774,40 +774,6 @@ async function totalSummary(food) {
 // ===================================================================================================================//
 // === GOOGLE VISION (getting labels for images) =====================================================================//
 // ===================================================================================================================//
-function googleVisionTheImage1(imgUrl) {
-    // We will be taking the first bestGuessesQty of labels
-    const bestGuessesQty = 5;
-
-    // Imports the Google Cloud client library
-    const vision = require('@google-cloud/vision');
-
-    // Creates a client
-    const client = new vision.ImageAnnotatorClient({
-        projectId: keys.googleCloudServiceKey.project_id,
-        credentials: {
-            private_key: keys.googleCloudServiceKey.private_key,
-            client_email: keys.googleCloudServiceKey.client_email
-        }
-    });
-
-    let imgLabels = [];
-
-    // Performs label detection on the image file
-    client
-        .labelDetection(imgUrl)
-        .then(results => {
-            const labels = results[0].labelAnnotations.slice(1,bestGuessesQty+1)
-
-            labels.forEach(label => imgLabels.push(label.description));
-            console.log(imgLabels);
-        })
-        .catch(error => {
-            console.log(`\nERROR from function googleVisionTheImage():\n${error}`);
-            throw new Error("Sorry but I failed to recognize anything on the image provided");
-        });
-}
-
-
 async function googleVisionTheImage(imgUrl) {
     // We will be taking the first bestGuessesQty of labels
     const bestGuessesQty = 5;
@@ -817,10 +783,10 @@ async function googleVisionTheImage(imgUrl) {
 
         // Creates a client
         const client = new vision.ImageAnnotatorClient({
-            projectId: keys.googleCloudServiceKey.project_id,
+            projectId: (keys.googleCloudServiceKey.project_id || process.env.gcProjectId),
             credentials: {
-                private_key: keys.googleCloudServiceKey.private_key,
-                client_email: keys.googleCloudServiceKey.client_email
+                private_key: (keys.googleCloudServiceKey.private_key || process.env.gcPrivateKey),
+                client_email: (keys.googleCloudServiceKey.client_email || process.env.clientEmail)
             }
         });
 
