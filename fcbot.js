@@ -37,7 +37,7 @@ app.get("/", function (req, res) {
 // Facebook Webhook
 // Used for verification
 app.get("/webhook", function (req, res) {
-    if (req.query["hub.verify_token"] === (process.env.verifyToken || keys.verifyToken)) {
+    if (req.query["hub.verify_token"] === (process.env.verifyToken/* || keys.verifyToken*/)) {
         console.log("FoodCompositionBot: Webhook verified");
         res.status(200).send(req.query["hub.challenge"]);
     } else {
