@@ -262,12 +262,12 @@ function protFatCarbsNumbersToText(nutrData) {
             kgToCoverDaylyFats = kgToCoverDailyNeeds(fatsDaily, fatsIn100g);
             kgToCoverDaylyCarbs = kgToCoverDailyNeeds(carbsDaily, carbsIn100g);
 
-            summary = `${food.charAt(0).toUpperCase() + food.slice(1)} contains approximately (per 100 g):\n
-            - proteins: ${protIn100g} g (will provide ${nutrData.data.procntRel}% of calories);\n
-            - fats: ${fatsIn100g} g (${nutrData.data.fatRel}%);\n
-            - carbohydrates: ${carbsIn100g} g (${nutrData.data.chocdfRel}%);\n`;
-            summary += `If to assume that an average person needs ${proteinsDaily}/${fatsDaily}/${carbsDaily} grams of proteins, fats and carbohydrates respectively (https://goo.gl/sGkDS),
-            then in order to cover daily requirements in \n
+            summary = `${food.charAt(0).toUpperCase() + food.slice(1)} contains approximately (per 100 g):
+            - proteins: ${protIn100g} g (will provide ${nutrData.data.procntRel}% of calories);
+            - fats: ${fatsIn100g} g (${nutrData.data.fatRel}%);
+            - carbohydrates: ${carbsIn100g} g (${nutrData.data.chocdfRel}%);`;
+            summary += `\nIf to assume that an average person needs ${proteinsDaily}/${fatsDaily}/${carbsDaily} grams of proteins, fats and carbohydrates respectively,
+            then in order to cover daily requirements in
             - proteins: one would need to consume ${kgToCoverDaylyProt} kg of ${food},
             - fats: ${kgToCoverDaylyFats} kg of ${food} and
             - carbohydrates: ${kgToCoverDaylyCarbs} kg of ${food}, respectively.`;
@@ -301,7 +301,6 @@ async function protFatsCarbsSummary(food) {
         throw new Error("Sorry but I failed to find info about proteins/fats/carbohydrates content in the food you requested");
     }
 }
-
 
 // === Vitamins ======================================================================================================//
 function getVitamins(allNutrients) {
@@ -442,13 +441,14 @@ function getVitamins(allNutrients) {
 
 function vitaminNumbersToText(vitaminData) {
     // Using numbers for main nutrients content (got using getNutrients() >> getProtFatCarbs()) composes a text summary
+    // P.s. % from daily requirements can be calculated but can be added later
     try {
         if (vitaminData.status == "ok") {
             let food, summary, vitAmcg, vitAME, vitB1, vitB2, vitB5, vitB6, vitB12, vitC, vitDmcg, vitDME, vitE, vitK;
             let vitAmcgIn100g, vitAMEIn100g, vitB1In100g, vitB2In100g, vitB5In100g, vitB6In100g, vitB12In100g,
                 vitCIn100g, vitDmcgIn100g, vitDMEIn100g, vitEIn100g, vitKIn100g;
 
-            food = nutrData.data.food;
+            food = vitaminData.data.food;
 
             // Vitamin A
             if (vitaminData.data.vitA_320) {
@@ -467,6 +467,8 @@ function vitaminNumbersToText(vitaminData) {
                 vitAME = 0;
             }
 
+            // Some vitamins are duplicated (2 analogous values or total value and several components)
+            // Let's get a single value for each vitamin (some vitamins have 2 values - in mcg/mg and IE)
             // Vitamin B1
             vitaminData.data.vitB1_404 ? vitB1 = vitaminData.data.vitB1_404 : vitB1 = 0;
 
@@ -602,9 +604,9 @@ function vitaminNumbersToText(vitaminData) {
                 vitKIn100g = 0;
             }
 
-            summary = `${food.charAt(0).toUpperCase() + food.slice(1)} contains approximately (per 100 g):\n`;
+            summary = `${food.charAt(0).toUpperCase() + food.slice(1)} contains approximately (per 100 g):`;
             if (vitAmcgIn100g || vitAMEIn100g) {
-                summary += "Vitamin A: ";
+                summary += "\nVitamin A: ";
                 if (vitAmcgIn100g && !vitAMEIn100g) {
                     summary += `${vitAmcgIn100g} mcg`;
                 }
@@ -641,7 +643,7 @@ function vitaminNumbersToText(vitaminData) {
             }
 
             if (vitDmcgIn100g || vitDMEIn100g) {
-                summary += "Vitamin D: ";
+                summary += "\nVitamin D: ";
                 if (vitDmcgIn100g && !vitDMEIn100g) {
                     summary += `${vitDmcgIn100g} mcg`;
                 }
@@ -675,20 +677,63 @@ function vitaminNumbersToText(vitaminData) {
 
 }
 
+
 async function vitaminsSummary(food) {
-    // Connects all functions to get a summary for proteins/fats/carbohydrates content in given food
+    // Connects all functions to get a summary for vitamins content in given food
     try {
         let allNutrients = await getNutrients(food);
         let vitaminData = await getVitamins(allNutrients);
-        console.log(vitaminData.data);
-        return true;
+        let vitaminSummary = await vitaminNumbersToText(vitaminData);
+        if (vitaminSummary.status == "ok") {
+            return vitaminSummary.data;
+        }
     } catch(error) {
-        console.log(`\nERROR from function protFatsCarbsSummary():\n${error}`);
-        throw new Error("Sorry but I failed to find info about vitamins content in the food you requested");
+        console.log(`\nERROR from function vitaminsSummary():\n${error}`);
+        throw new Error("Sorry but I failed to find vitamin data for the food you requested");
     }
 }
 
-let food = "butter";
+
+async function totalSummary(food) {
+    // Connects all functions for all 3 queries (calories, proteins/fats/carbs, vitamins)
+    // to get a total summary for a given food
+    let allTogether = "";
+    try {
+        let allNutrients = await getNutrients(food);
+
+        let caloriesData = await getCalories(allNutrients);
+        let calSummary = await caloriesNumbersToText(caloriesData);
+        if (calSummary.status == "ok") {
+            allTogether += calSummary.data;
+        }
+
+        let nutrData = await getProtFatCarbs(allNutrients);
+        let nutrSummary = await protFatCarbsNumbersToText(nutrData);
+        if (nutrSummary.status == "ok") {
+            if (allTogether != "") {
+                allTogether += "\n\n";
+            }
+            allTogether += nutrSummary.data;
+        }
+
+        let vitaminData = await getVitamins(allNutrients);
+        let vitaminSummary = await vitaminNumbersToText(vitaminData);
+        if (vitaminSummary.status == "ok") {
+            if (allTogether != "") {
+                allTogether += "\n\n";
+            }
+            allTogether += vitaminSummary.data;
+        }
+
+        return allTogether;
+
+    } catch(error) {
+        console.log(`\nERROR from function vitaminsSummary():\n${error}`);
+        throw new Error("Sorry but I failed to find data for the food you requested");
+    }
+}
+
+let food = "meat";
 /*
 caloriesSummary(food)
     .then(
@@ -701,10 +746,17 @@ protFatsCarbsSummary(food)
         result => {console.log(result)},
         error => {console.log("Sorry but I failed to find info about proteins/fats/carbohydrates content in the food you requested")}
     );
-*/
+
 
 vitaminsSummary(food)
     .then(
         result => {console.log(result)},
-        error => {console.log("Sorry but I failed to find info about proteins/fats/carbohydrates content in the food you requested")}
+        error => {console.log("Sorry but I failed to find vitamin data for the food you requested")}
+    );
+*/
+
+totalSummary(food)
+    .then(
+        result => {console.log(result)},
+        error => {console.log("Sorry but I failed to find data for the food you requested")}
     );
