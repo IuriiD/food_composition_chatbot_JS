@@ -14,15 +14,18 @@ const protCalPerG = 4; // calories per 1g, http://healthyeating.sfgate.com/gram-
 const fatCalPerG = 9; // calories per 1g, http://healthyeating.sfgate.com/gram-protein-carbohydrates-contains-many-kilocalories-5978.html
 const carbCalPerG = 4; // calories per 1g, http://healthyeating.sfgate.com/gram-protein-carbohydrates-contains-many-kilocalories-5978.html
 
+// ===================================================================================================================//
+// === NUTRITIONIX (getting nutrient data) ===========================================================================//
+// ===================================================================================================================//
 async function getNutrients(food) {
-    // Makes a request to Nutritionix API and returns nutrient data for a given food
+    // Makes a request to Nutritionix API and returns all nutrient data for a given food
     try {
         let response = await fetch(nutrietnsURL, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "x-app-id": keys.appID,
-                "x-app-key": keys.appKey,
+                "x-app-id": keys.nutritionixAppID,
+                "x-app-key": keys.nutritionixAppKey,
                 "x-remote-user-id": 0
             },
             body: JSON.stringify({query: food})
@@ -301,6 +304,7 @@ async function protFatsCarbsSummary(food) {
         throw new Error("Sorry but I failed to find info about proteins/fats/carbohydrates content in the food you requested");
     }
 }
+
 
 // === Vitamins ======================================================================================================//
 function getVitamins(allNutrients) {
@@ -733,8 +737,80 @@ async function totalSummary(food) {
     }
 }
 
+
+// ===================================================================================================================//
+// === GOOGLE VISION (getting labels for images) =====================================================================//
+// ===================================================================================================================//
+function googleVisionTheImage1(imgUrl) {
+    // We will be taking the first bestGuessesQty of labels
+    const bestGuessesQty = 5;
+
+    // Imports the Google Cloud client library
+    const vision = require('@google-cloud/vision');
+
+    // Creates a client
+    const client = new vision.ImageAnnotatorClient({
+        projectId: keys.googleCloudServiceKey.project_id,
+        credentials: {
+            private_key: keys.googleCloudServiceKey.private_key,
+            client_email: keys.googleCloudServiceKey.client_email
+        }
+    });
+
+    let imgLabels = [];
+
+    // Performs label detection on the image file
+    client
+        .labelDetection(imgUrl)
+        .then(results => {
+            const labels = results[0].labelAnnotations.slice(1,bestGuessesQty+1)
+
+            labels.forEach(label => imgLabels.push(label.description));
+            console.log(imgLabels);
+        })
+        .catch(error => {
+            console.log(`\nERROR from function googleVisionTheImage():\n${error}`);
+            throw new Error("Sorry but I failed to recognize anything on the image provided");
+        });
+}
+
+
+async function googleVisionTheImage(imgUrl) {
+    // We will be taking the first bestGuessesQty of labels
+    const bestGuessesQty = 5;
+    try {
+        // Imports the Google Cloud client library
+        const vision = require('@google-cloud/vision');
+
+        // Creates a client
+        const client = new vision.ImageAnnotatorClient({
+            projectId: keys.googleCloudServiceKey.project_id,
+            credentials: {
+                private_key: keys.googleCloudServiceKey.private_key,
+                client_email: keys.googleCloudServiceKey.client_email
+            }
+        });
+
+        let imgLabels = [];
+
+        // Performs label detection on the image file
+        const results = await client.labelDetection(imgUrl);
+        const labels = results[0].labelAnnotations.slice(1, bestGuessesQty+1);
+        labels.forEach(label => imgLabels.push(label.description));
+        return imgLabels;
+    } catch(error) {
+        console.log(`\nERROR from function googleVisionTheImage():\n${error}`);
+        throw new Error("Sorry but I failed to recognize anything on the image provided");
+    }
+}
+
+
+
 let food = "meat";
+const imgUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Honeycrisp-Apple.jpg/532px-Honeycrisp-Apple.jpg";
+
 /*
+// === Testing output ================================================================================================//
 caloriesSummary(food)
     .then(
         result => {console.log(result)},
@@ -753,10 +829,17 @@ vitaminsSummary(food)
         result => {console.log(result)},
         error => {console.log("Sorry but I failed to find vitamin data for the food you requested")}
     );
-*/
+
 
 totalSummary(food)
     .then(
         result => {console.log(result)},
         error => {console.log("Sorry but I failed to find data for the food you requested")}
     );
+
+
+googleVisionTheImage(imgUrl).then(
+    result => { console.log(result) },
+    error => { console.log("Sorry but I failed to recognize anything on the image provided") }
+);
+*/

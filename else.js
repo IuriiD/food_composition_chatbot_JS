@@ -1,12 +1,21 @@
-const a = undefined;
-const b = 0;
+// Imports the Google Cloud client library
+const vision = require('@google-cloud/vision');
 
-if (b) {
-    console.log('True');
-} else {console.log('False')}
+// Creates a client
+const client = new vision.ImageAnnotatorClient();
 
-console.log(b);
+// Performs label detection on the image file
+client
+    .labelDetection('https://cdn1.medicalnewstoday.com/content/images/articles/267290-apples.jpg')
+    .then(results => {
+        const labels = results[0].labelAnnotations;
 
+        console.log('Labels:');
+        labels.forEach(label => console.log(label.description));
+    })
+    .catch(err => {
+        console.error('ERROR:', err);
+    });
 /*
 // Nutritionix API v1.1, GET request with filters
 const url = `https://api.nutritionix.com/v1_1/search/${food}?results=0%3A${howManyTerms}&cal_min=0&cal_max=50000&fields=item_name%2Cbrand_name%2Citem_id%2Cbrand_id&appId=${keys.appID}&appKey=${keys.appKey}`;
