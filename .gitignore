@@ -8,5 +8,4 @@
 *node_modules/
 *else/
 *.git/
-#*keys.js
 *.gitignore
