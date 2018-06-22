@@ -4,9 +4,9 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const bodyParser = require("body-parser");
-const keys = require("./keys");
-const functions = require(".functions");
-const variables = require("./variables");
+//const keys = require("./keys");
+//const functions = require(".functions");
+//const variables = require("./variables");
 
 const nutrietnsURL = "https://trackapi.nutritionix.com/v2/natural/nutrients";
 
