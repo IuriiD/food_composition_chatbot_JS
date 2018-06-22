@@ -4,6 +4,7 @@
   "description": "Chatbot telling nutrition data for food on photo",
   "main": "fcbot.js",
   "scripts": {
+    "start": "node fcbot.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
