@@ -37,7 +37,7 @@ app.get("/", function (req, res) {
 // Facebook Webhook
 // Used for verification
 app.get("/webhook", function (req, res) {
-    if (req.query["hub.verify_token"] === (keys.verifyToken || process.env.verifyToken)) {
+    if (req.query["hub.verify_token"] === (process.env.verifyToken || keys.verifyToken)) {
         console.log("FoodCompositionBot: Webhook verified");
         res.status(200).send(req.query["hub.challenge"]);
     } else {
@@ -57,8 +57,8 @@ async function getNutrients(food) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "x-app-id": (keys.nutritionixAppID || process.env.nutritionixAppID),
-                "x-app-key": (keys.nutritionixAppKey || process.env.nutritionixAppKey),
+                "x-app-id": (process.env.nutritionixAppID || keys.nutritionixAppID),
+                "x-app-key": (process.env.nutritionixAppKey || keys.nutritionixAppKey),
                 "x-remote-user-id": 0
             },
             body: JSON.stringify({query: food})
@@ -783,10 +783,10 @@ async function googleVisionTheImage(imgUrl) {
 
         // Creates a client
         const client = new vision.ImageAnnotatorClient({
-            projectId: (keys.googleCloudServiceKey.project_id || process.env.gcProjectId),
+            projectId: (process.env.gcProjectId || keys.googleCloudServiceKey.project_id),
             credentials: {
-                private_key: (keys.googleCloudServiceKey.private_key || process.env.gcPrivateKey),
-                client_email: (keys.googleCloudServiceKey.client_email || process.env.clientEmail)
+                private_key: (process.env.gcPrivateKey || keys.googleCloudServiceKey.private_key ),
+                client_email: (process.env.clientEmail || keys.googleCloudServiceKey.client_email)
             }
         });
 
