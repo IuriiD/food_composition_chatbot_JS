@@ -4,7 +4,7 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const bodyParser = require("body-parser");
-//const keys = require("./keys");
+const keys = require("./keys");
 //const functions = require(".functions");
 //const variables = require("./variables");
 
@@ -23,26 +23,54 @@ const fatCalPerG = 9; // calories per 1g, http://healthyeating.sfgate.com/gram-p
 const carbCalPerG = 4; // calories per 1g, http://healthyeating.sfgate.com/gram-protein-carbohydrates-contains-many-kilocalories-5978.html
 
 
-
 let app = express();
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
-app.listen((process.env.PORT || 5000));
+app.listen((process.env.PORT || 5000), function() {console.log('FoodCompositionBot: Webhook server is listening, port 5000')});
+
 
 // Server index page
-app.get("/", function (req, res) {
+app.get("/", (req, res) => {
     res.send("FoodCompositionBot<br>More details: <a href='https://github.com/IuriiD/food_composition_chatbot_JS'>Github</a><br><a href='http://iuriid.github.io'>Iurii Dziuban - June 2018</a>");
 });
+
 
 // Facebook Webhook
 // Used for verification
 app.get("/webhook", function (req, res) {
-    if (req.query["hub.verify_token"] === (process.env.verifyToken/* || keys.verifyToken*/)) {
+    if (req.query["hub.verify_token"] === (process.env.verifyToken || keys.verifyToken)) {
         console.log("FoodCompositionBot: Webhook verified");
         res.status(200).send(req.query["hub.challenge"]);
     } else {
         console.error("FoodCompositionBot: Verification failed. Tokens do not match.");
         res.sendStatus(403);
+    }
+});
+
+
+// All callbacks for Messenger will be POST-ed here
+app.post("/webhook", (req, res) => {
+    // Make sure this is a page subscription
+    if (req.body.object == "page") {
+        // Iterate over each entry
+        // There may be multiple entries if batched
+        req.body.entry.forEach(entry => {
+            // Iterate over each messaging event
+            if (entry.messaging) {
+                entry.messaging.forEach(event => {
+                    if ((event.message
+                        && event.message.text
+                        && !event.message.is_echo)
+                        || (event.postback
+                        && event.postback.payload)) {
+
+                        //processMessage(event);
+                        console.log(event);
+                    }
+                })
+            }
+        });
+        res.sendStatus(200);
     }
 });
 
@@ -794,6 +822,7 @@ async function googleVisionTheImage(imgUrl) {
 
         // Performs label detection on the image file
         const results = await client.labelDetection(imgUrl);
+        console.log(results);
         const labels = results[0].labelAnnotations.slice(1, bestGuessesQty+1);
         labels.forEach(label => imgLabels.push(label.description));
         return imgLabels;
@@ -807,6 +836,7 @@ async function googleVisionTheImage(imgUrl) {
 
 let food = "meat";
 const imgUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Honeycrisp-Apple.jpg/532px-Honeycrisp-Apple.jpg";
+const imgUrl1 = "https://scontent.xx.fbcdn.net/v/t1.15752-9/36063381_459161051174328_756983205621399552_n.jpg?_nc_cat=0&_nc_ad=z-m&_nc_cid=0&oh=6d0c3e5b3dd2b291b0ec9a9e60d3ff31&oe=5BB09239";
 
 /*
 // === Testing output ================================================================================================//
@@ -836,9 +866,8 @@ totalSummary(food)
         error => {console.log("Sorry but I failed to find data for the food you requested")}
     );
 
-
-googleVisionTheImage(imgUrl).then(
+*/
+googleVisionTheImage(imgUrl1).then(
     result => { console.log(result) },
     error => { console.log("Sorry but I failed to recognize anything on the image provided") }
 );
-*/

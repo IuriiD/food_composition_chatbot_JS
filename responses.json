@@ -1,3 +1,67 @@
+// FB Messenger
+// req.body : text input "1"
+{
+  "object": "page",
+  "entry": [
+    {
+      "id": "230099550919706",
+      "time": 1529783890531,
+      "messaging": [
+        {
+          "sender": {
+            "id": "2145482708800024"
+          },
+          "recipient": {
+            "id": "230099550919706"
+          },
+          "timestamp": 1529783890199,
+          "message": {
+            "mid": "mid.$cAACLs82lhbZqX375F1kLjmym1Ddd",
+            "seq": 18191,
+            "text": "1"
+          }
+        }
+      ]
+    }
+  ]
+}
+
+// req.body : image
+{
+  "object": "page",
+  "entry": [
+    {
+      "id": "230099550919706",
+      "time": 1529784000047,
+      "messaging": [
+        {
+          "sender": {
+            "id": "2145482708800024"
+          },
+          "recipient": {
+            "id": "230099550919706"
+          },
+          "timestamp": 1529783999764,
+          "message": {
+            "mid": "mid.$cAACLs82lhbZqX4ClFFkLjtO3M-J9",
+            "seq": 18192,
+            "attachments": [
+              {
+                "type": "image",
+                "payload": {
+                  "url": "https://scontent.xx.fbcdn.net/v/t1.15752-9/36063381_459161051174328_756983205621399552_n.jpg?_nc_cat=0&_nc_ad=z-m&_nc_cid=0&oh=6d0c3e5b3dd2b291b0ec9a9e60d3ff31&oe=5BB09239"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+
+// Nutritionix
 // query: "bread"
 // attr_ids: https://docs.google.com/spreadsheets/d/14ssR3_vFYrVAidDLJoio07guZM80SMR5nxdGpAX-1-A/edit#gid=0
 {
