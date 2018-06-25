@@ -2,7 +2,6 @@
 
 const express = require("express");
 const fetch = require("node-fetch");
-const rp = require("request-promise");
 const request = require("request");
 const bodyParser = require("body-parser");
 const keys = require("./keys");
@@ -59,14 +58,12 @@ app.post("/webhook", (req, res) => {
             // Iterate over each messaging event
             if (entry.messaging) {
                 entry.messaging.forEach(event => {
-                    if ((event.message
-                        && event.message.text
-                        && !event.message.is_echo)
-                        || (event.postback
-                        && event.postback.payload)) {
+                    if ((event.message && event.message.text && !event.message.is_echo) // text
+                        || (event.postback && event.postback.payload)                   // button click
+                        || (event.message && event.message.attachments[0].type == "image")) { // image
 
-                        //processMessage(event);
-                        console.log(event);
+                        processMessage(event);
+                        //console.log(event);
                     }
                 })
             }
@@ -75,6 +72,26 @@ app.post("/webhook", (req, res) => {
     }
 });
 
+function processMessage(event) {
+    // Let's get what we've received from user (text, button click, image or other input)
+    if (event.message && event.message.text && !event.message.is_echo) {
+        console.log(`User entered some text:\n${event.message.text}`);
+
+        totalSummary(event.message.text)
+            .then(
+                result => {console.log(result)},
+                error => {console.log("Sorry but I failed to find data for the food you requested")}
+            );
+
+    } else if (event.message && event.message.attachments[0].type == "image") {
+        console.log(`User uploaded a photo, link:\n${event.message.attachments[0].payload.url}`);
+        
+
+    } else if (event.postback && event.postback.payload) {
+        console.log(`User clicked a button, payload:\n${event.postback.payload}`);
+    }
+    //console.log(event);
+}
 
 // ===================================================================================================================//
 // === NUTRITIONIX (getting nutrient data) ===========================================================================//
