@@ -1,8 +1,9 @@
 "use strict"
 
-
 const express = require("express");
 const fetch = require("node-fetch");
+const rp = require("request-promise");
+const request = require("request");
 const bodyParser = require("body-parser");
 const keys = require("./keys");
 //const functions = require(".functions");
@@ -802,41 +803,112 @@ async function totalSummary(food) {
 // ===================================================================================================================//
 // === GOOGLE VISION (getting labels for images) =====================================================================//
 // ===================================================================================================================//
-async function googleVisionTheImage(imgUrl) {
-    // We will be taking the first bestGuessesQty of labels
-    const bestGuessesQty = 5;
-    try {
-        // Imports the Google Cloud client library
-        const vision = require('@google-cloud/vision');
+function imgToBase64(imgUrl) {
+    // For images uploaded by user to FB Messenger - retrieves an image from given imgUrl and converts it
+    // to a base64 encoded
+    const requestNullEncoding = require('request').defaults({ encoding: null });
 
-        // Creates a client
-        const client = new vision.ImageAnnotatorClient({
-            projectId: (process.env.gcProjectId || keys.googleCloudServiceKey.project_id),
-            credentials: {
-                private_key: (process.env.gcPrivateKey || keys.googleCloudServiceKey.private_key ),
-                client_email: (process.env.clientEmail || keys.googleCloudServiceKey.client_email)
+    return new Promise((resolve, reject) => {
+        requestNullEncoding.get(imgUrl, function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                let data = new Buffer(body).toString("base64");
+                resolve(data);
+            } else {
+                console.log(`\nERROR from function imgToBase64():\n${error}`);
+                reject("Sorry but I failed to recognize anything on the image provided");
             }
         });
-
-        let imgLabels = [];
-
-        // Performs label detection on the image file
-        const results = await client.labelDetection(imgUrl);
-        console.log(results);
-        const labels = results[0].labelAnnotations.slice(1, bestGuessesQty+1);
-        labels.forEach(label => imgLabels.push(label.description));
-        return imgLabels;
-    } catch(error) {
-        console.log(`\nERROR from function googleVisionTheImage():\n${error}`);
-        throw new Error("Sorry but I failed to recognize anything on the image provided");
-    }
+    })
 }
 
 
+function googleVisionBase64(imgBase64) {
+    // Passes an image as base64 encoded to Google Vision API to get labels
+    const bestGuessesQty = 5; // Number of labels requested
+    let imgLabels = [];
 
-let food = "meat";
-const imgUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Honeycrisp-Apple.jpg/532px-Honeycrisp-Apple.jpg";
-const imgUrl1 = "https://scontent.xx.fbcdn.net/v/t1.15752-9/36063381_459161051174328_756983205621399552_n.jpg?_nc_cat=0&_nc_ad=z-m&_nc_cid=0&oh=6d0c3e5b3dd2b291b0ec9a9e60d3ff31&oe=5BB09239";
+    return new Promise((resolve, reject) => {
+        request({
+                url: "https://vision.googleapis.com/v1/images:annotate",
+                method: "POST",
+                qs: {
+                    key: keys.googleVisionApiKey
+                },
+                json: true,
+                body: {
+                    "requests": [
+                        {
+                            "image": {
+                                "content": imgBase64
+                            },
+                            "features": [
+                                {
+                                    "type": "LABEL_DETECTION",
+                                    "maxResults": bestGuessesQty
+                                }
+                            ]
+                        }
+                    ]}
+            }, (error, response, body) => {
+                if (!error && response.statusCode == 200 && !response.body.responses[0].error) {
+                    body.responses[0].labelAnnotations.forEach(label => imgLabels.push(label.description));
+                    //console.log(imgLabels);
+                    resolve(imgLabels);
+                } else {
+                    console.log(`\nERROR from function googleVisionUrl():\n${error || JSON.stringify(response.body.responses[0].error)}`);
+                    reject("Sorry but I failed to recognize anything on the image provided");
+                }
+            }
+        )
+    });
+}
+
+
+function googleVisionUrl(imgUrl) {
+    // Passes an image by URL to Google Vision API to get labels
+    const bestGuessesQty = 5; // Number of labels requested
+    let imgLabels = [];
+
+    return new Promise((resolve, reject) => {
+        request({
+                url: "https://vision.googleapis.com/v1/images:annotate",
+                method: "POST",
+                qs: {
+                    key: keys.googleVisionApiKey
+                },
+                json: true,
+                body: {
+                    "requests": [
+                        {
+                            "image": {
+                                "source": {
+                                    "imageUri": imgUrl
+                                }
+                            },
+                            "features": [
+                                {
+                                    "type": "LABEL_DETECTION",
+                                    "maxResults": bestGuessesQty
+                                }
+                            ]
+                        }
+                    ]}
+            }, (error, response, body) => {
+                //console.log("Error: " + error);
+                //console.log("Response: " + JSON.stringify(response));
+                if (!error && response.statusCode == 200 && !response.body.responses[0].error) {
+                    body.responses[0].labelAnnotations.forEach(label => imgLabels.push(label.description));
+                    //console.log(imgLabels);
+                    resolve(imgLabels);
+                } else {
+                    console.log(`\nERROR from function googleVisionUrl():\n${error || JSON.stringify(response.body.responses[0].error)}`);
+                    reject("Sorry but I failed to recognize anything on the image provided");
+                }
+            }
+        )
+    });
+}
+
 
 /*
 // === Testing output ================================================================================================//
@@ -866,8 +938,9 @@ totalSummary(food)
         error => {console.log("Sorry but I failed to find data for the food you requested")}
     );
 
-*/
+
 googleVisionTheImage(imgUrl1).then(
     result => { console.log(result) },
     error => { console.log("Sorry but I failed to recognize anything on the image provided") }
 );
+*/
