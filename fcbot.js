@@ -61,23 +61,38 @@ app.post("/webhook", (req, res) => {
         req.body.entry.forEach(entry => {
             // Iterate over each messaging event
             if (entry.messaging) {
-                let goodImage = false;
+                let userInput = {
+                    "type": "other", // by default
+                    "payload": null
+                };
+
                 entry.messaging.forEach(event => {
+                    let senderId = event.sender.id;
                     if (event.message && event.message.attachments) {
                         if (event.message.attachments[0].type === "image" && !event.message.attachments[0].payload.sticker_id) {
-                            goodImage = true;
-                        } else { goodImage = false; }
-                    } else { goodImage = false; }
+                            userInput = {
+                                "type": "image",
+                                "payload": event.message.attachments[0].payload.url
+                            }
+                        }
 
-                    if (event.message && event.message.text && !event.message.is_echo // text
-                        || event.postback && event.postback.payload // button click
-                        || goodImage) { // image
-                        processMessage(event);
-                    } else {
-                        console.log("Other input types - need some fallback reaction here");
+                    if (event.message && event.message.text && !event.message.is_echo) {
+                        userInput = {
+                            "type": "text",
+                            "payload": event.message.text
+                        }
                     }
 
+                    if (event.postback && event.postback.payload) {
+                        userInput = {
+                            "type": "buttonClick",
+                            "payload": event.postback.payload
+                        }
+                    }
 
+                    console.log(`User input: ${userInput}`);
+                    processMessage(senderId, userInput);
+                    }
                 })
             }
         });
@@ -85,10 +100,33 @@ app.post("/webhook", (req, res) => {
     }
 });
 
-async function processMessage(event) {
-    // Let's get what we've received from user (text, button click, image or other input)
-    let senderId = event.sender.id;
+async function processMessage(senderId, userInput) {
+    // Main dialog flow
+    if (userInput.type == "image") {
+        try {
+            await typingOnOff(senderId, 5);
 
+            await send_text_message(senderId, "Image received. Let me analyse it...");
+
+            let imgBase64 = await imgToBase64(userInput.payload);
+            //console.log(imgBase64);
+
+            let imgLabels = await googleVisionBase64(imgBase64);
+            console.log(imgLabels);
+
+            await typingOnOff(senderId, 3);
+
+            await send_text_message(senderId, "Done");
+
+            await send_text_message(senderId, `My best guess that it's:\n\n${imgLabels[0].toUpperCase()}`+
+            `\n\nIs that right? Please confirm, choose another variant from my guesses or enter your own variant.`);
+        } catch (error) {
+            send_text_message(senderId, error);
+        }
+    }
+
+
+    /*
     if (event.message && event.message.text && !event.message.is_echo) {
         console.log(`User entered some text:\n${event.message.text}`);
 
@@ -106,28 +144,6 @@ async function processMessage(event) {
             console.log(error);
         }
 
-
-        /*
-        totalSummary(event.message.text)
-            .then(
-                result => {
-                    console.log(result);
-                    send_text_message(senderId, result);
-                    return true;
-                }
-            )
-            .then(
-                typingOnOff(senderId, 5);
-                return true;
-            )
-            .then(
-                send_text_message(senderId, '5 seconds passed')
-            )
-            .catch(
-                error => {console.log("Sorry but I failed to find data for the food you requested")}
-                );*/
-
-
     } else if (event.message && event.message.attachments[0].type == "image") {
         console.log(`User uploaded a photo, link:\n${event.message.attachments[0].payload.url}`);
 
@@ -135,7 +151,7 @@ async function processMessage(event) {
     } else if (event.postback && event.postback.payload) {
         console.log(`User clicked a button, payload:\n${event.postback.payload}`);
     }
-    //console.log(event);
+    //console.log(event);*/
 }
 
 // ===================================================================================================================//
@@ -997,7 +1013,7 @@ function send_text_message(userId, text) {
                     //#console.log(`Message ${text} successfully sent to user ${userId}`);
                     resolve(true);
                 } else {
-                    console.log(`\nERROR from function send_text_message():\n${error || JSON.stringify(response.body.responses[0].error)}`);
+                    console.log(`\nERROR from function send_text_message():\n${error}`);
                     reject(false);
                 }
             }
