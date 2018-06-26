@@ -11,7 +11,7 @@ const keys = require("./keys");
 const nutrietnsURL = "https://trackapi.nutritionix.com/v2/natural/nutrients";
 
 // ===================================================================================================================//
-// === VARIABLES =====================================================================================================//
+// === PARAMETERS ====================================================================================================//
 // ===================================================================================================================//
 const averageDailyCalories = 2200;
 const proteinsDaily = 50; // grams, http://www.mydailyintake.net/daily-intake-levels/
@@ -21,6 +21,9 @@ const sugarsDaily = 90; // grams, http://www.mydailyintake.net/daily-intake-leve
 const protCalPerG = 4; // calories per 1g, http://healthyeating.sfgate.com/gram-protein-carbohydrates-contains-many-kilocalories-5978.html
 const fatCalPerG = 9; // calories per 1g, http://healthyeating.sfgate.com/gram-protein-carbohydrates-contains-many-kilocalories-5978.html
 const carbCalPerG = 4; // calories per 1g, http://healthyeating.sfgate.com/gram-protein-carbohydrates-contains-many-kilocalories-5978.html
+
+let context = [];   // here we store name(-s) of the last "block" that was triggered; depending on context, user's input
+                    // may be handled differently
 
 
 let app = express();
@@ -38,7 +41,7 @@ app.get("/", (req, res) => {
 // Facebook Webhook
 // Used for verification
 app.get("/webhook", function (req, res) {
-    if (req.query["hub.verify_token"] === (process.env.verifyToken || keys.verifyToken)) {
+    if (req.query["hub.verify_token"] === (process.env.verifyToken || keys.fbVerifyToken)) {
         console.log("FoodCompositionBot: Webhook verified");
         res.status(200).send(req.query["hub.challenge"]);
     } else {
@@ -54,38 +57,80 @@ app.post("/webhook", (req, res) => {
     if (req.body.object == "page") {
         // Iterate over each entry
         // There may be multiple entries if batched
+        //#console.log(JSON.stringify(req.body.entry));
         req.body.entry.forEach(entry => {
             // Iterate over each messaging event
             if (entry.messaging) {
+                let goodImage = false;
                 entry.messaging.forEach(event => {
-                    if ((event.message && event.message.text && !event.message.is_echo) // text
-                        || (event.postback && event.postback.payload)                   // button click
-                        || (event.message && event.message.attachments[0].type == "image")) { // image
+                    if (event.message && event.message.attachments) {
+                        if (event.message.attachments[0].type === "image" && !event.message.attachments[0].payload.sticker_id) {
+                            goodImage = true;
+                        } else { goodImage = false; }
+                    } else { goodImage = false; }
 
+                    if (event.message && event.message.text && !event.message.is_echo // text
+                        || event.postback && event.postback.payload // button click
+                        || goodImage) { // image
                         processMessage(event);
-                        //console.log(event);
+                    } else {
+                        console.log("Other input types - need some fallback reaction here");
                     }
+
+
                 })
             }
         });
-        res.sendStatus(200);
+        res.status(200).end();
     }
 });
 
-function processMessage(event) {
+async function processMessage(event) {
     // Let's get what we've received from user (text, button click, image or other input)
+    let senderId = event.sender.id;
+
     if (event.message && event.message.text && !event.message.is_echo) {
         console.log(`User entered some text:\n${event.message.text}`);
 
+        try {
+            let result = await totalSummary(event.message.text);
+            console.log(result);
+            let msgSent = await send_text_message(senderId, result);
+            if (msgSent) {
+                let typingDisplayed = await typingOnOff(senderId, 5);
+                if (typingDisplayed) {
+                    let secondMessage = await send_text_message(senderId, '5 seconds passed');
+                }
+            }
+        } catch (error) {
+            console.log(error);
+        }
+
+
+        /*
         totalSummary(event.message.text)
             .then(
-                result => {console.log(result)},
+                result => {
+                    console.log(result);
+                    send_text_message(senderId, result);
+                    return true;
+                }
+            )
+            .then(
+                typingOnOff(senderId, 5);
+                return true;
+            )
+            .then(
+                send_text_message(senderId, '5 seconds passed')
+            )
+            .catch(
                 error => {console.log("Sorry but I failed to find data for the food you requested")}
-            );
+                );*/
+
 
     } else if (event.message && event.message.attachments[0].type == "image") {
         console.log(`User uploaded a photo, link:\n${event.message.attachments[0].payload.url}`);
-        
+
 
     } else if (event.postback && event.postback.payload) {
         console.log(`User clicked a button, payload:\n${event.postback.payload}`);
@@ -164,6 +209,9 @@ function getCalories(allNutrients) {
             if (!enercKCal && enercKj) {
                 enercKCal = enercKj / 4.184;
             }
+
+            enercKCal = Math.floor(enercKCal  * 100) / 100;
+            enercKj = Math.floor(enercKj  * 100) / 100;
 
             return {
                 "status": "ok",
@@ -811,7 +859,7 @@ async function totalSummary(food) {
         return allTogether;
 
     } catch(error) {
-        console.log(`\nERROR from function vitaminsSummary():\n${error}`);
+        console.log(`\nERROR from function totalSummary():\n${error}`);
         throw new Error("Sorry but I failed to find data for the food you requested");
     }
 }
@@ -926,6 +974,103 @@ function googleVisionUrl(imgUrl) {
     });
 }
 
+
+// ===================================================================================================================//
+// === FACEBOOK ======================================================================================================//
+// ===================================================================================================================//
+function send_text_message(userId, text) {
+    // Sends a text message (text) to FB user with userId
+    return new Promise((resolve, reject) => {
+        request({
+                url: "https://graph.facebook.com/v2.6/me/messages",
+                method: "POST",
+                qs: {
+                    access_token: keys.fbPageAccessToken
+                },
+                json: true,
+                body: {
+                    "recipient": { "id": userId },
+                    "message": { "text": text }
+                }
+            }, (error, response, body) => {
+                if (!error && response.statusCode == 200) {
+                    //#console.log(`Message ${text} successfully sent to user ${userId}`);
+                    resolve(true);
+                } else {
+                    console.log(`\nERROR from function send_text_message():\n${error || JSON.stringify(response.body.responses[0].error)}`);
+                    reject(false);
+                }
+            }
+        )
+    });
+}
+
+
+function typingOn(userId) {
+    // Displays typing sign
+    return new Promise((resolve, reject) => {
+        request({
+                url: "https://graph.facebook.com/v2.6/me/messages",
+                method: "POST",
+                qs: {
+                    access_token: keys.fbPageAccessToken
+                },
+                json: true,
+                body: {
+                    "recipient": { "id": userId },
+                    "sender_action": "typing_on"
+                }
+            }, (error, response, body) => {
+                if (!error && response.statusCode == 200) {
+                    console.log(`Sender action "typing_on" for user ${userId} successfully sent`);
+                    resolve(true);
+                } else {
+                    console.log(`\nERROR from function typingOn():\n${error}`);
+                    reject(false);
+                }
+            }
+        )
+    });
+}
+
+function typingOff(userId) {
+    // Stops typing sign
+    return new Promise((resolve, reject) => {
+        request({
+                url: "https://graph.facebook.com/v2.6/me/messages",
+                method: "POST",
+                qs: {
+                    access_token: keys.fbPageAccessToken
+                },
+                json: true,
+                body: {
+                    "recipient": { "id": userId },
+                    "sender_action": "typing_off"
+                }
+            }, (error, response, body) => {
+                if (!error && response.statusCode == 200) {
+                    console.log(`Sender action "typing_off" for user ${userId} successfully sent`);
+                    resolve(true);
+                } else {
+                    console.log(`\nERROR from function typingOff():\n${error}`);
+                    reject(false);
+                }
+            }
+        )
+    });
+}
+
+function timeout(sec) {
+    return new Promise(resolve => setTimeout(resolve, sec * 1000));
+}
+
+async function typingOnOff(userId, duration) {
+    // Displays typing action for user with userId for duration seconds
+    await typingOn(userId);
+    await timeout(duration);
+    await typingOff(userId);
+    return true;
+}
 
 /*
 // === Testing output ================================================================================================//
