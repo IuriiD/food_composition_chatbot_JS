@@ -60,6 +60,36 @@
   ]
 }
 
+// Quick reply button clicked
+{
+  "object": "page",
+  "entry": [
+    {
+      "id": "230099550919706",
+      "time": 1530086267364,
+      "messaging": [
+        {
+          "sender": {
+            "id": "2145482708800024"
+          },
+          "recipient": {
+            "id": "230099550919706"
+          },
+          "timestamp": 1530086267030,
+          "message": {
+            "quick_reply": {
+              "payload": "white"
+            },
+            "mid": "mid.$cAACLs82lhbZqcYTgllkQD-UZyF23",
+            "seq": 18719,
+            "text": "Correct"
+          }
+        }
+      ]
+    }
+  ]
+}
+
 
 // Nutritionix
 // query: "bread"

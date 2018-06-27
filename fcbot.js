@@ -68,30 +68,27 @@ app.post("/webhook", (req, res) => {
 
                 entry.messaging.forEach(event => {
                     let senderId = event.sender.id;
-                    if (event.message && event.message.attachments) {
-                        if (event.message.attachments[0].type === "image" && !event.message.attachments[0].payload.sticker_id) {
+
+                    if (event.message) {
+                        if (event.message.quick_reply) {
                             userInput = {
-                                "type": "image",
-                                "payload": event.message.attachments[0].payload.url
+                                "type": "quickReplyButtonClick",
+                                "payload": event.message.quick_reply.payload
+                            }
+                        } else if (event.message.attachments) {
+                            if (event.message.attachments[0].type === "image" && !event.message.attachments[0].payload.sticker_id) {
+                                userInput = {
+                                    "type": "image",
+                                    "payload": event.message.attachments[0].payload.url
+                                }
+                        } else if (event.message.text && !event.message.is_echo) {
+                                userInput = {
+                                    "type": "text",
+                                    "payload": event.message.text
+                                }
                             }
                         }
-
-                    if (event.message && event.message.text && !event.message.is_echo) {
-                        userInput = {
-                            "type": "text",
-                            "payload": event.message.text
-                        }
-                    }
-
-                    if (event.postback && event.postback.payload) {
-                        userInput = {
-                            "type": "buttonClick",
-                            "payload": event.postback.payload
-                        }
-                    }
-
-                    console.log(`User input: ${userInput}`);
-                    processMessage(senderId, userInput);
+                        processMessage(senderId, userInput);
                     }
                 })
             }
@@ -109,19 +106,58 @@ async function processMessage(senderId, userInput) {
             await send_text_message(senderId, "Image received. Let me analyse it...");
 
             let imgBase64 = await imgToBase64(userInput.payload);
-            //console.log(imgBase64);
 
             let imgLabels = await googleVisionBase64(imgBase64);
-            console.log(imgLabels);
 
             await typingOnOff(senderId, 3);
 
             await send_text_message(senderId, "Done");
 
-            await send_text_message(senderId, `My best guess that it's:\n\n${imgLabels[0].toUpperCase()}`+
-            `\n\nIs that right? Please confirm, choose another variant from my guesses or enter your own variant.`);
+            await typingOnOff(senderId, 3);
+
+            if (imgLabels.length>0) {
+                await send_text_message(senderId, `My best guess that it's:\n\n${imgLabels[0].toUpperCase()}`);
+
+                let quickButtons = {
+                    "Correct": `LABEL:${imgLabels[0]}`,
+                    "My variant": `LABEL:USERDEFINES`
+                };
+
+                if (imgLabels.length>1) {
+                    for (let label of imgLabels.slice(1)) {
+                        quickButtons[label] = `LABEL:${label}`
+                    }
+                }
+
+                await typingOnOff(senderId, 3);
+                await send_quick_replies_msg(senderId, "Is that right? Please confirm, choose another variant from my guesses or enter your own variant", quickButtons);
+                context.push("User picks up a label");
+
+            } else {
+                // No labels were picked up
+                await send_text_message(senderId, "Unfortunately I failed to pick up any terms for this image. Are you sure it's Ok? Maybe try with a different one?");
+            }
+
         } catch (error) {
-            send_text_message(senderId, error);
+            await send_text_message(senderId, "Unfortunately I failed to pick up any terms for this image. Are you sure it's Ok? Maybe try with a different one?");
+        }
+    } else if (userInput.type == "quickReplyButtonClick") {
+        console.log(userInput.payload);
+        console.log(context);
+
+        if (context.includes("User picks up a label")) {
+            let foodLabel = userInput.payload.slice(6);
+            if (foodLabel != "USERDEFINES") {
+                let quickButtons = {
+                    "Calories": `LABEL:${imgLabels[0]}`,
+                    "My variant": `LABEL:USERDEFINES`
+                };
+                await send_quick_replies_msg(senderId, `What nutrient data ${foodLabel} are you interested in?`);
+            } else {
+                context.splice(context.indexOf("User picks up a label"), 1);
+                context.push("Awaiting user's label");
+                await send_text_message(senderId, "Ok. Please type in what do you think is show on this photo");
+            }
         }
     }
 
@@ -1014,6 +1050,48 @@ function send_text_message(userId, text) {
                     resolve(true);
                 } else {
                     console.log(`\nERROR from function send_text_message():\n${error}`);
+                    reject(false);
+                }
+            }
+        )
+    });
+}
+
+
+function send_quick_replies_msg(userId, title, buttons) {
+    // Sends a message (title) with quick buttons (buttons) to FB user with userId
+    let quickButtons = [];
+    for (let key in buttons) {
+        quickButtons.push(
+            {
+                "content_type": "text",
+                "title": key,
+                "payload": buttons[key]
+            }
+        )
+    }
+
+    return new Promise((resolve, reject) => {
+        request({
+                url: "https://graph.facebook.com/v2.6/me/messages",
+                method: "POST",
+                qs: {
+                    access_token: keys.fbPageAccessToken
+                },
+                json: true,
+                body: {
+                    "recipient": { "id": userId },
+                    "message": {
+                        "text": title,
+                        "quick_replies": quickButtons
+                    }
+                }
+            }, (error, response, body) => {
+                if (!error && response.statusCode == 200) {
+                    //#console.log(`Message ${text} successfully sent to user ${userId}`);
+                    resolve(true);
+                } else {
+                    console.log(`\nERROR from function send_quick_replies_msg():\n${error}`);
                     reject(false);
                 }
             }
