@@ -22,7 +22,7 @@ const protCalPerG = 4; // calories per 1g, http://healthyeating.sfgate.com/gram-
 const fatCalPerG = 9; // calories per 1g, http://healthyeating.sfgate.com/gram-protein-carbohydrates-contains-many-kilocalories-5978.html
 const carbCalPerG = 4; // calories per 1g, http://healthyeating.sfgate.com/gram-protein-carbohydrates-contains-many-kilocalories-5978.html
 
-let context = [];   // here we store name(-s) of the last "block" that was triggered; depending on context, user's input
+let context = "";   // here we store the name of the last "block" that was triggered; depending on context, user's input
                     // may be handled differently
 
 
@@ -70,7 +70,14 @@ app.post("/webhook", (req, res) => {
                     let senderId = event.sender.id;
 
                     if (event.message) {
-                        if (event.message.quick_reply) {
+
+                        if (event.message.text && !event.message.quick_reply && !event.message.is_echo) {
+                            console.log('Here!');
+                            userInput = {
+                                "type": "text",
+                                "payload": event.message.text
+                            }
+                        } else if (event.message.quick_reply) {
                             userInput = {
                                 "type": "quickReplyButtonClick",
                                 "payload": event.message.quick_reply.payload
@@ -81,11 +88,11 @@ app.post("/webhook", (req, res) => {
                                     "type": "image",
                                     "payload": event.message.attachments[0].payload.url
                                 }
-                        } else if (event.message.text && !event.message.is_echo) {
-                                userInput = {
-                                    "type": "text",
-                                    "payload": event.message.text
-                                }
+                            }
+                        } else {
+                            userInput = {
+                                "type": "other",
+                                "payload": null
                             }
                         }
                         processMessage(senderId, userInput);
@@ -99,6 +106,7 @@ app.post("/webhook", (req, res) => {
 
 async function processMessage(senderId, userInput) {
     // Main dialog flow
+    // IMAGE UPLOADS are handled here
     if (userInput.type == "image") {
         try {
             await typingOnOff(senderId, 5);
@@ -131,7 +139,7 @@ async function processMessage(senderId, userInput) {
 
                 await typingOnOff(senderId, 3);
                 await send_quick_replies_msg(senderId, "Is that right? Please confirm, choose another variant from my guesses or enter your own variant", quickButtons);
-                context.push("User picks up a label");
+                context = "User picks up a label";
 
             } else {
                 // No labels were picked up
@@ -141,53 +149,123 @@ async function processMessage(senderId, userInput) {
         } catch (error) {
             await send_text_message(senderId, "Unfortunately I failed to pick up any terms for this image. Are you sure it's Ok? Maybe try with a different one?");
         }
+
+    // BUTTON CLICKS are handled here
     } else if (userInput.type == "quickReplyButtonClick") {
         console.log(userInput.payload);
         console.log(context);
 
-        if (context.includes("User picks up a label")) {
+        if (context == "User picks up a label") {
             let foodLabel = userInput.payload.slice(6);
             if (foodLabel != "USERDEFINES") {
                 let quickButtons = {
-                    "Calories": `LABEL:${imgLabels[0]}`,
-                    "My variant": `LABEL:USERDEFINES`
+                    "Calories": `NUTRDATA#${foodLabel}#CALORIES`,
+                    "Proteins/Fats/Carbs": `NUTRDATA#${foodLabel}#NUTRIENTS`,
+                    "Vitamins": `NUTRDATA#${foodLabel}#VITAMINS`,
+                    "All together": `NUTRDATA#${foodLabel}#ALL`
                 };
-                await send_quick_replies_msg(senderId, `What nutrient data ${foodLabel} are you interested in?`);
+                await typingOnOff(senderId, 3);
+                context = "What data to display";
+                await send_quick_replies_msg(senderId, `What nutrient data for ${foodLabel} are you interested in?`, quickButtons);
             } else {
-                context.splice(context.indexOf("User picks up a label"), 1);
-                context.push("Awaiting user's label");
-                await send_text_message(senderId, "Ok. Please type in what do you think is show on this photo");
+                context = "Awaiting user's label";
+                await send_text_message(senderId, "Ok. Please type in what do you think is shown on this photo");
+            }
+        } else if (context == "What data to display") {
+            let nutrDataNeeded = userInput.payload.split("#")[2];
+            let foodToAnalyse = userInput.payload.split("#")[1];
+            if (nutrDataNeeded == "CALORIES") {
+                let caloriesData = await caloriesSummary(foodToAnalyse);
+                caloriesData += "\n\nAnything else?";
+                await typingOnOff(senderId, 3);
+                let quickButtons = {
+                    "Proteins/Fats/Carbs": `NUTRDATA#${foodToAnalyse}#NUTRIENTS`,
+                    "Vitamins": `NUTRDATA#${foodToAnalyse}#VITAMINS`,
+                    "All together": `NUTRDATA#${foodToAnalyse}#ALL`
+                };
+                await send_quick_replies_msg(senderId, caloriesData, quickButtons);
+            } else if (nutrDataNeeded == "NUTRIENTS") {
+                let nutrData = await protFatsCarbsSummary(foodToAnalyse);
+                nutrData += "\n\nAnything else?";
+                await typingOnOff(senderId, 3);
+                let quickButtons = {
+                    "Calories": `NUTRDATA#${foodToAnalyse}#CALORIES`,
+                    "Vitamins": `NUTRDATA#${foodToAnalyse}#VITAMINS`,
+                    "All together": `NUTRDATA#${foodToAnalyse}#ALL`
+                };
+                await send_quick_replies_msg(senderId, nutrData, quickButtons);
+            } else if (nutrDataNeeded == "VITAMINS") {
+                let vitaminData = await vitaminsSummary(foodToAnalyse);
+                vitaminData += "\n\nAnything else?";
+                await typingOnOff(senderId, 3);
+                let quickButtons = {
+                    "Calories": `NUTRDATA#${foodToAnalyse}#CALORIES`,
+                    "Proteins/Fats/Carbs": `NUTRDATA#${foodToAnalyse}#NUTRIENTS`,
+                    "All together": `NUTRDATA#${foodToAnalyse}#ALL`
+                };
+                await send_quick_replies_msg(senderId, vitaminData, quickButtons);
+            } else if (nutrDataNeeded == "ALL") {
+                let allData = await totalSummary(foodToAnalyse);
+                await typingOnOff(senderId, 3);
+                await send_text_message(senderId, allData);
+                await typingOnOff(senderId, 3);
+                context = "";
+                await send_text_message(senderId, "Feel free to give me another photo/photo's URL or name of food ;)");
+            }
+        } else if (context == "If this is a label") {
+            let userAnswer = userInput.payload;
+            if (userAnswer != "LABEL:NO") {
+                let userLabel = userInput.payload.slice(6);
+                let quickButtons = {
+                    "Calories": `NUTRDATA#${userLabel}#CALORIES`,
+                    "Proteins/Fats/Carbs": `NUTRDATA#${userLabel}#NUTRIENTS`,
+                    "Vitamins": `NUTRDATA#${userLabel}#VITAMINS`,
+                    "All together": `NUTRDATA#${userLabel}#ALL`
+                };
+                await typingOnOff(senderId, 3);
+                context = "What data to display";
+                await send_quick_replies_msg(senderId, `What nutrient data for ${userLabel} are you interested in?`, quickButtons);
+            } else {
+                await typingOnOff(senderId, 3);
+                context = "";
+                await send_text_message(senderId, "Ok. Feel free to give me another photo/photo's URL or name of food ;)");
             }
         }
-    }
 
-
-    /*
-    if (event.message && event.message.text && !event.message.is_echo) {
-        console.log(`User entered some text:\n${event.message.text}`);
-
-        try {
-            let result = await totalSummary(event.message.text);
-            console.log(result);
-            let msgSent = await send_text_message(senderId, result);
-            if (msgSent) {
-                let typingDisplayed = await typingOnOff(senderId, 5);
-                if (typingDisplayed) {
-                    let secondMessage = await send_text_message(senderId, '5 seconds passed');
-                }
-            }
-        } catch (error) {
-            console.log(error);
+    // TEXT INPUT is handled here
+    } else if (userInput.type == "text") {
+        if (context == "Awaiting user's label") {
+            let usersLabel = userInput.payload;
+            await typingOnOff(senderId, 3);
+            await send_text_message(senderId, `Okay, let me see what info I can find for ${usersLabel}..`);
+            await typingOnOff(senderId, 3);
+            let quickButtons = {
+                "Calories": `NUTRDATA#${usersLabel}#CALORIES`,
+                "Proteins/Fats/Carbs": `NUTRDATA#${usersLabel}#NUTRIENTS`,
+                "Vitamins": `NUTRDATA#${usersLabel}#VITAMINS`,
+                "All together": `NUTRDATA#${usersLabel}#ALL`
+            };
+            await typingOnOff(senderId, 3);
+            context = "What data to display";
+            await send_quick_replies_msg(senderId, `What nutrient data for ${usersLabel} are you interested in?`, quickButtons);
+        } else {
+            let usersLabel = userInput.payload;
+            let quickButtons = {
+                "Yes": `LABEL:${usersLabel}`,
+                "No": "LABEL:NO"
+            };
+            context = "If this is a label";
+            await typingOnOff(senderId, 3);
+            await send_quick_replies_msg(senderId, `Should I consider "${usersLabel.toUpperCase()}" as the name of food for which I should search nutrient data?`, quickButtons);
         }
 
-    } else if (event.message && event.message.attachments[0].type == "image") {
-        console.log(`User uploaded a photo, link:\n${event.message.attachments[0].payload.url}`);
-
-
-    } else if (event.postback && event.postback.payload) {
-        console.log(`User clicked a button, payload:\n${event.postback.payload}`);
+    // OTHER INPUT (besides image upload, text input or quick reply buttons click) is handled here
+    } else {
+        await send_text_message(senderId, ";)");
+        await typingOnOff(senderId, 3);
+        await send_text_message(senderId, "Feel free to give me a photo of food/URL to a photo of food or just a name of food ;)");
     }
-    //console.log(event);*/
+
 }
 
 // ===================================================================================================================//
@@ -444,15 +522,8 @@ function protFatCarbsNumbersToText(nutrData) {
             kgToCoverDaylyFats = kgToCoverDailyNeeds(fatsDaily, fatsIn100g);
             kgToCoverDaylyCarbs = kgToCoverDailyNeeds(carbsDaily, carbsIn100g);
 
-            summary = `${food.charAt(0).toUpperCase() + food.slice(1)} contains approximately (per 100 g):
-            - proteins: ${protIn100g} g (will provide ${nutrData.data.procntRel}% of calories);
-            - fats: ${fatsIn100g} g (${nutrData.data.fatRel}%);
-            - carbohydrates: ${carbsIn100g} g (${nutrData.data.chocdfRel}%);`;
-            summary += `\nIf to assume that an average person needs ${proteinsDaily}/${fatsDaily}/${carbsDaily} grams of proteins, fats and carbohydrates respectively,
-            then in order to cover daily requirements in
-            - proteins: one would need to consume ${kgToCoverDaylyProt} kg of ${food},
-            - fats: ${kgToCoverDaylyFats} kg of ${food} and
-            - carbohydrates: ${kgToCoverDaylyCarbs} kg of ${food}, respectively.`;
+            summary = `${food.charAt(0).toUpperCase() + food.slice(1)} contains approximately (per 100 g):\n- proteins: ${protIn100g} g (will provide ${nutrData.data.procntRel}% of calories);\n- fats: ${fatsIn100g} g (${nutrData.data.fatRel}%);\n- carbohydrates: ${carbsIn100g} g (${nutrData.data.chocdfRel}%);`;
+            summary += `\n\nIf to assume that an average person needs ${proteinsDaily}/${fatsDaily}/${carbsDaily} grams of proteins, fats and carbohydrates respectively, then in order to cover daily requirements in\n- proteins: one would need to consume ${kgToCoverDaylyProt} kg of ${food},\n- fats: ${kgToCoverDaylyFats} kg of ${food} and\n- carbohydrates: ${kgToCoverDaylyCarbs} kg of ${food}, respectively.`;
 
             return {
                 "status": "ok",
