@@ -90,6 +90,59 @@
   ]
 }
 
+{
+  "statusCode":400,
+  "body":{
+    "error":{
+      "message":"(#100) Param message[text] must be a UTF-8 encoded string",
+      "type":"OAuthException",
+      "code":100,
+      "fbtrace_id":"Gu+CBMgGHc0"
+    }
+  },
+  "headers":{
+    "access-control-allow-origin":"*",
+    "x-page-usage":"{\"call_count\":0,\"total_cputime\":0,\"total_time\":0}",
+    "x-app-usage":"{\"call_count\":0,\"total_cputime\":0,\"total_time\":0}",
+    "strict-transport-security":"max-age=15552000; preload",
+    "x-fb-trace-id":"Gu+CBMgGHc0",
+    "x-fb-rev":"4061816",
+    "content-type":"application/json",
+    "facebook-api-version":"v3.0",
+    "cache-control":"no-store",
+    "pragma":"no-cache",
+    "expires":"Sat, 01 Jan 2000 00:00:00 GMT",
+    "www-authenticate":"OAuth \"Facebook Platform\" \"invalid_request\" \"(#100) Param message[text] must be a UTF-8 encoded string\"",
+    "x-fb-debug":"/sK/g+xvyxJ8FTodVMacYTpwYzrWNMnPIRvv570dzeRWCc8OBmWODx/l0yOGkAqa9NzoKtkbioUDzePpvzt/QQ==",
+    "date":"Fri, 29 Jun 2018 17:51:31 GMT",
+    "connection":"close",
+    "content-length":"143"
+  },
+  "request":{
+    "uri":{
+      "protocol":"https:",
+      "slashes":true,
+      "auth":null,
+      "host":"graph.facebook.com",
+      "port":null,
+      "hostname":"graph.facebook.com",
+      "hash":null,
+      "search":"?access_token=EAAFvW4PDFGkBAFmHqqpHZBwzRrNwi3tK8MIbzyhJVQCixPUxZAGFkOG8CbV0vf6w24wX2GA5vl4yAy6LJIhFIMQgLjZAafGCs4KnqGBWoKQwoI71vfHQ0bzGxjpZBBbsnswL50xsZCZAdOmBu6Llfmt8W7ZCok0PHL2mqNsaAI0XakNPfkGOlly",
+      "query":"access_token=EAAFvW4PDFGkBAFmHqqpHZBwzRrNwi3tK8MIbzyhJVQCixPUxZAGFkOG8CbV0vf6w24wX2GA5vl4yAy6LJIhFIMQgLjZAafGCs4KnqGBWoKQwoI71vfHQ0bzGxjpZBBbsnswL50xsZCZAdOmBu6Llfmt8W7ZCok0PHL2mqNsaAI0XakNPfkGOlly",
+      "pathname":"/v2.6/me/messages",
+      "path":"/v2.6/me/messages?access_token=EAAFvW4PDFGkBAFmHqqpHZBwzRrNwi3tK8MIbzyhJVQCixPUxZAGFkOG8CbV0vf6w24wX2GA5vl4yAy6LJIhFIMQgLjZAafGCs4KnqGBWoKQwoI71vfHQ0bzGxjpZBBbsnswL50xsZCZAdOmBu6Llfmt8W7ZCok0PHL2mqNsaAI0XakNPfkGOlly",
+      "href":"https://graph.facebook.com/v2.6/me/messages?access_token=EAAFvW4PDFGkBAFmHqqpHZBwzRrNwi3tK8MIbzyhJVQCixPUxZAGFkOG8CbV0vf6w24wX2GA5vl4yAy6LJIhFIMQgLjZAafGCs4KnqGBWoKQwoI71vfHQ0bzGxjpZBBbsnswL50xsZCZAdOmBu6Llfmt8W7ZCok0PHL2mqNsaAI0XakNPfkGOlly"
+    },
+    "method":"POST",
+    "headers":{
+      "accept":"application/json",
+      "content-type":"application/json",
+      "content-length":61
+    }
+  }
+}
+
+
 
 // Nutritionix
 // query: "bread"
