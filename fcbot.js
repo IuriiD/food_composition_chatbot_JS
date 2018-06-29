@@ -25,6 +25,9 @@ const carbCalPerG = 4; // calories per 1g, http://healthyeating.sfgate.com/gram-
 let context = "";   // here we store the name of the last "block" that was triggered; depending on context, user's input
                     // may be handled differently
 
+const expression = /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
+const regex = new RegExp(expression);
+
 
 let app = express();
 app.use(bodyParser.urlencoded({extended: false}));
@@ -81,7 +84,7 @@ app.post("/webhook", (req, res) => {
                         // User clicked quick response button
                         } else if (event.message.quick_reply) {
                             userInput = {
-                                "type": "quickReplyButtonClick",
+                                "type": "buttonClick",
                                 "payload": event.message.quick_reply.payload
                             }
 
@@ -104,8 +107,25 @@ app.post("/webhook", (req, res) => {
                         }
                         console.log(`\nuserInput: ${JSON.stringify(userInput)}`);
                         if (!event.message.is_echo) {   // Needn't react to bot's messages
+                            console.log(userInput);
                             processMessage(senderId, userInput);
                         }
+
+                    // Getting started and persistent menu buttons
+                    } else if (event.postback) {
+                        if (event.postback.payload === "GETTING_STARTED") {
+                            userInput = {
+                                "type": "buttonClick",
+                                "payload": "GETTING_STARTED"
+                            };
+
+                        } else if (event.postback.payload === "NEEDHELP") {
+                            userInput = {
+                                "type": "buttonClick",
+                                "payload": "NEEDHELP"
+                            };
+                        }
+                        processMessage(senderId, userInput);
                     }
                 })
             }
@@ -120,17 +140,11 @@ async function processMessage(senderId, userInput) {
     if (userInput.type == "image") {
         try {
             await typingOnOff(senderId, 5);
-
             await send_text_message(senderId, "Image received. Let me analyse it...");
-
             let imgBase64 = await imgToBase64(userInput.payload);
-
             let imgLabels = await googleVisionBase64(imgBase64);
-
             await typingOnOff(senderId, 3);
-
             await send_text_message(senderId, "Done");
-
             await typingOnOff(senderId, 3);
 
             if (imgLabels.length>0) {
@@ -163,7 +177,8 @@ async function processMessage(senderId, userInput) {
         }
 
     // BUTTON CLICKS are handled here
-    } else if (userInput.type == "quickReplyButtonClick") {
+    } else if (userInput.type == "buttonClick") {
+        console.log('Button click');
         try {
             if (context == "User picks up a label") {
                 let foodLabel = userInput.payload.slice(6);
@@ -241,6 +256,20 @@ async function processMessage(senderId, userInput) {
                     await send_text_message(senderId, "Ok. Feel free to give me another photo/photo's URL or name of food ;)");
                 }
             }
+            // Getting started button was clicked
+            if (userInput.payload == "GETTING_STARTED") {
+                await send_text_message(senderId, "Hi! I'm a FoodCompositionBot");
+                await typingOnOff(senderId, 4);
+                await send_text_message(senderId, "Give me an image of some food 🍕 🍔🍭 and I'll do my best to provide nutrient data for it (calories, proteins/fats/carbohydrates, vitamins content) 📊 ⚗️");
+                await typingOnOff(senderId, 3);
+                await send_text_message(senderId, "You can also drop me a link to a food image or simply type the name of the food.");
+            }
+            // Persistent menu >> Help button was clicked
+            await typingOnOff(senderId, 3);
+            await send_text_message(senderId, "I'm a FoodCompositionBot. Give me a photo of some food and I:\n- will try to guess what's on the photo and \n- to tell you some useful info about this food's composition");
+            await typingOnOff(senderId, 6);
+            await send_text_message(senderId, "Feel free to:\n- upload a photo of some food from your camera or photos;\n- drop me a link to a food image or\n- simply type a name of food 🍕 🍔🍭");
+
         } catch (error) {
             console.log(`\nError from buttonclick handling block: ${error}`);
             await send_text_message(senderId, error);
@@ -252,6 +281,7 @@ async function processMessage(senderId, userInput) {
     } else if (userInput.type == "text") {
         try {
             if (context == "Awaiting user's label") {
+                // Any text input (including URL) will be considered as user's name for the food
                 let usersLabel = userInput.payload;
                 await typingOnOff(senderId, 3);
                 await send_text_message(senderId, `Okay, let me see what info I can find for ${usersLabel}..`);
@@ -266,14 +296,48 @@ async function processMessage(senderId, userInput) {
                 context = "What data to display";
                 await send_quick_replies_msg(senderId, `What nutrient data for ${usersLabel} are you interested in?`, quickButtons);
             } else {
+                // Here we may get either a name of food or an URL
                 let usersLabel = userInput.payload;
-                let quickButtons = {
-                    "Yes": `LABEL:${usersLabel}`,
-                    "No": "LABEL:NO"
-                };
-                context = "If this is a label";
-                await typingOnOff(senderId, 3);
-                await send_quick_replies_msg(senderId, `Should I consider "${usersLabel.toUpperCase()}" as the name of food for which I should search nutrient data?`, quickButtons);
+
+                if (usersLabel.match(regex)) {
+                    // User entered a string which qualifies as a valid URL
+                    let imgLabels = await googleVisionUrl(usersLabel);
+                    await send_text_message(senderId, "Analysing image by URL...");
+                    await typingOnOff(senderId, 3);
+                    await send_text_message(senderId, "Finished");
+                    if (imgLabels.length>0) {
+                        await send_text_message(senderId, `My best guess that this image shows:\n\n${imgLabels[0].toUpperCase()}`);
+
+                        let quickButtons = {
+                            "Correct": `LABEL:${imgLabels[0]}`,
+                            "My variant": `LABEL:USERDEFINES`
+                        };
+
+                        if (imgLabels.length>1) {
+                            for (let label of imgLabels.slice(1)) {
+                                quickButtons[label] = `LABEL:${label}`
+                            }
+                        }
+
+                        await typingOnOff(senderId, 3);
+                        await send_quick_replies_msg(senderId, "Is that right? Please confirm, choose another variant from my guesses or enter your own variant", quickButtons);
+                        context = "User picks up a label";
+
+                    } else {
+                        // No labels were picked up
+                        await send_text_message(senderId, "Unfortunately I failed to pick up any terms for the image by your link. Are you sure that this URL and/or image are Ok? Maybe try with a different one?");
+                    }
+
+                } else {
+                    // User entered some text which is supposed to be a food label
+                    let quickButtons = {
+                        "Yes": `LABEL:${usersLabel}`,
+                        "No": "LABEL:NO"
+                    };
+                    context = "If this is a label";
+                    await typingOnOff(senderId, 3);
+                    await send_quick_replies_msg(senderId, `Should I consider "${usersLabel.toUpperCase()}" as the name of food for which I should search nutrient data?`, quickButtons);
+                }
             }
         } catch (error) {
             console.log('Error from text handling block');
@@ -1263,6 +1327,34 @@ async function typingOnOff(userId, duration) {
     await typingOff(userId);
     return true;
 }
+
+/*
+async function getsUserFirstName(userId) {
+    // Retrieves user's first name
+    return new Promise((resolve, reject) => {
+        request({
+                url: "https://graph.facebook.com/v2.6/me/messages",
+                method: "POST",
+                qs: {
+                    access_token: keys.fbPageAccessToken
+                },
+                json: true,
+                body: {
+                    "recipient": { "id": userId },
+                    "sender_action": "typing_off"
+                }
+            }, (error, response, body) => {
+                if (!error && response.statusCode == 200) {
+                    //console.log(`Sender action "typing_off" for user ${userId} successfully sent`);
+                    resolve(true);
+                } else {
+                    console.log(`\nERROR from function typingOff():\n${error}`);
+                    reject(false);
+                }
+            }
+        )
+    });
+}*/
 
 /*
 // === Testing output ================================================================================================//

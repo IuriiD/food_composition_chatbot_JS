@@ -60,6 +60,32 @@
   ]
 }
 
+// Getting started button click
+{
+  "object": "page",
+  "entry": [
+    {
+      "id": "230099550919706",
+      "time": 1530300995505,
+      "messaging": [
+        {
+          "recipient": {
+            "id": "230099550919706"
+          },
+          "timestamp": 1530300995505,
+          "sender": {
+            "id": "2145482708800024"
+          },
+          "postback": {
+            "payload": "GETTING_STARTED",
+            "title": "Get Started"
+          }
+        }
+      ]
+    }
+  ]
+}
+
 // Quick reply button clicked
 {
   "object": "page",
