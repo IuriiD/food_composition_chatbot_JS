@@ -6,7 +6,7 @@ const request = require("request");
 const bodyParser = require("body-parser");
 //const keys = require("./keys");
 //const functions = require(".functions");
-//const variables = require("./variables");
+//const variables = require("./variablkeyses");
 
 const nutrietnsURL = "https://trackapi.nutritionix.com/v2/natural/nutrients";
 
@@ -44,7 +44,7 @@ app.get("/", (req, res) => {
 // Facebook Webhook
 // Used for verification
 app.get("/webhook", function (req, res) {
-    if (req.query["hub.verify_token"] === (process.env.verifyToken || keys.fbVerifyToken)) {
+    if (req.query["hub.verify_token"] === process.env.verifyToken) {//(process.env.verifyToken || keys.fbVerifyToken)) {
         console.log("FoodCompositionBot: Webhook verified");
         res.status(200).send(req.query["hub.challenge"]);
     } else {
@@ -378,8 +378,8 @@ async function getNutrients(food) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "x-app-id": (process.env.nutritionixAppID || keys.nutritionixAppID),
-                "x-app-key": (process.env.nutritionixAppKey || keys.nutritionixAppKey),
+                "x-app-id": process.env.nutritionixAppID,//(process.env.nutritionixAppID || keys.nutritionixAppID),
+                "x-app-key": process.env.nutritionixAppKey, //(process.env.nutritionixAppKey || keys.nutritionixAppKey),
                 "x-remote-user-id": 0
             },
             body: JSON.stringify({query: food})
@@ -1108,7 +1108,7 @@ function googleVisionBase64(imgBase64) {
                 url: "https://vision.googleapis.com/v1/images:annotate",
                 method: "POST",
                 qs: {
-                    key: (process.env.googleVisionApiKey || keys.googleVisionApiKey)
+                    key: process.env.googleVisionApiKey//(process.env.googleVisionApiKey || keys.googleVisionApiKey)
                 },
                 json: true,
                 body: {
@@ -1150,7 +1150,7 @@ function googleVisionUrl(imgUrl) {
                 url: "https://vision.googleapis.com/v1/images:annotate",
                 method: "POST",
                 qs: {
-                    key: (process.env.googleVisionApiKey || keys.googleVisionApiKey)
+                    key: process.env.googleVisionApiKey//(process.env.googleVisionApiKey || keys.googleVisionApiKey)
                 },
                 json: true,
                 body: {
@@ -1203,7 +1203,7 @@ function send_text_message(userId, text) {
                 url: "https://graph.facebook.com/v2.6/me/messages",
                 method: "POST",
                 qs: {
-                    access_token: (process.env.fbPageAccessToken || keys.fbPageAccessToken)
+                    access_token: process.env.fbPageAccessToken//(process.env.fbPageAccessToken || keys.fbPageAccessToken)
                 },
                 json: true,
                 body: {
@@ -1243,7 +1243,7 @@ function send_quick_replies_msg(userId, title, buttons) {
                 url: "https://graph.facebook.com/v2.6/me/messages",
                 method: "POST",
                 qs: {
-                    access_token: (process.env.fbPageAccessToken || keys.fbPageAccessToken)
+                    access_token: process.env.fbPageAccessToken//(process.env.fbPageAccessToken || keys.fbPageAccessToken)
                 },
                 json: true,
                 body: {
@@ -1274,7 +1274,7 @@ function send_share_button_msg(userId) {
                 url: "https://graph.facebook.com/v2.6/me/messages",
                 method: "POST",
                 qs: {
-                    access_token: (process.env.fbPageAccessToken || keys.fbPageAccessToken)
+                    access_token: process.env.fbPageAccessToken//(process.env.fbPageAccessToken || keys.fbPageAccessToken)
                 },
                 json: true,
                 body: {
@@ -1347,7 +1347,7 @@ function typingOn(userId) {
                 url: "https://graph.facebook.com/v2.6/me/messages",
                 method: "POST",
                 qs: {
-                    access_token: (process.env.fbPageAccessToken || keys.fbPageAccessToken)
+                    access_token: process.env.fbPageAccessToken//(process.env.fbPageAccessToken || keys.fbPageAccessToken)
                 },
                 json: true,
                 body: {
@@ -1374,7 +1374,7 @@ function typingOff(userId) {
                 url: "https://graph.facebook.com/v2.6/me/messages",
                 method: "POST",
                 qs: {
-                    access_token: (process.env.fbPageAccessToken || keys.fbPageAccessToken)
+                    access_token: process.env.fbPageAccessToken//(process.env.fbPageAccessToken || keys.fbPageAccessToken)
                 },
                 json: true,
                 body: {
