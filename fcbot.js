@@ -4,7 +4,7 @@ const express = require("express");
 const fetch = require("node-fetch");
 const request = require("request");
 const bodyParser = require("body-parser");
-const keys = require("./keys");
+//const keys = require("./keys");
 //const functions = require(".functions");
 //const variables = require("./variables");
 
