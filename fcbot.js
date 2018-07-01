@@ -134,6 +134,8 @@ app.post("/webhook", (req, res) => {
     }
 });
 
+
+// Main conversation flow function
 async function processMessage(senderId, userInput) {
     // Main dialog flow
     // IMAGE UPLOADS are handled here
@@ -1338,8 +1340,6 @@ function send_share_button_msg(userId) {
 }
 
 
-
-
 function typingOn(userId) {
     // Displays typing sign
     return new Promise((resolve, reject) => {
@@ -1366,6 +1366,7 @@ function typingOn(userId) {
         )
     });
 }
+
 
 function typingOff(userId) {
     // Stops typing sign
