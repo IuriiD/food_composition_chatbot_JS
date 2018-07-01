@@ -258,17 +258,24 @@ async function processMessage(senderId, userInput) {
             }
             // Getting started button was clicked
             if (userInput.payload == "GETTING_STARTED") {
-                await send_text_message(senderId, "Hi! I'm a FoodCompositionBot");
+                await send_text_message(senderId, "Hi! I'm a FoodCompositionBot. I can analyse food's composition by image");
                 await typingOnOff(senderId, 4);
-                await send_text_message(senderId, "Give me an image of some food 🍕 🍔🍭 and I'll do my best to provide nutrient data for it (calories, proteins/fats/carbohydrates, vitamins content) 📊 ⚗️");
+                await send_text_message(senderId, "Give me an image of some food 🍕 🍔🍭 and I'll do my best to provide nutrient data for it (calories, proteins/fats/carbohydrates, vitamins content) 🔍 📊");
                 await typingOnOff(senderId, 3);
                 await send_text_message(senderId, "You can also drop me a link to a food image or simply type the name of the food.");
             }
             // Persistent menu >> Help button was clicked
-            await typingOnOff(senderId, 3);
-            await send_text_message(senderId, "I'm a FoodCompositionBot. Give me a photo of some food and I:\n- will try to guess what's on the photo and \n- to tell you some useful info about this food's composition");
-            await typingOnOff(senderId, 6);
-            await send_text_message(senderId, "Feel free to:\n- upload a photo of some food from your camera or photos;\n- drop me a link to a food image or\n- simply type a name of food 🍕 🍔🍭");
+            if (userInput.payload == "NEEDHELP") {
+                await typingOnOff(senderId, 3);
+                await send_text_message(senderId, "I'm a FoodCompositionBot. Give me a photo of some food and I will do my best to:\n- guess what's on the photo and \n- tell you some useful info about the composition of this food (caloric value, proteins/fats/carbohydrates ratio, vitamins content) 🔍 📊");
+                await typingOnOff(senderId, 3);
+                await send_text_message(senderId, "Nutrients data: Nutritionix API (http://www.nutritionix.com/api)\nImage content analysis: Google Cloud Vision API (https://cloud.google.com/vision/)");
+                await typingOnOff(senderId, 3);
+                await send_share_button_msg(senderId);
+                await typingOnOff(senderId, 6);
+                await send_text_message(senderId, "Feel free to:\n- upload a photo of some food from your camera or photos;\n- drop me a link to a food image or\n- simply type a name of food 🍕 🍔🍭");
+
+            }
 
         } catch (error) {
             console.log(`\nError from buttonclick handling block: ${error}`);
@@ -1101,7 +1108,7 @@ function googleVisionBase64(imgBase64) {
                 url: "https://vision.googleapis.com/v1/images:annotate",
                 method: "POST",
                 qs: {
-                    key: keys.googleVisionApiKey
+                    key: (process.env.googleVisionApiKey || keys.googleVisionApiKey)
                 },
                 json: true,
                 body: {
@@ -1143,7 +1150,7 @@ function googleVisionUrl(imgUrl) {
                 url: "https://vision.googleapis.com/v1/images:annotate",
                 method: "POST",
                 qs: {
-                    key: keys.googleVisionApiKey
+                    key: (process.env.googleVisionApiKey || keys.googleVisionApiKey)
                 },
                 json: true,
                 body: {
@@ -1196,7 +1203,7 @@ function send_text_message(userId, text) {
                 url: "https://graph.facebook.com/v2.6/me/messages",
                 method: "POST",
                 qs: {
-                    access_token: keys.fbPageAccessToken
+                    access_token: (process.env.fbPageAccessToken || keys.fbPageAccessToken)
                 },
                 json: true,
                 body: {
@@ -1236,7 +1243,7 @@ function send_quick_replies_msg(userId, title, buttons) {
                 url: "https://graph.facebook.com/v2.6/me/messages",
                 method: "POST",
                 qs: {
-                    access_token: keys.fbPageAccessToken
+                    access_token: (process.env.fbPageAccessToken || keys.fbPageAccessToken)
                 },
                 json: true,
                 body: {
@@ -1260,6 +1267,79 @@ function send_quick_replies_msg(userId, title, buttons) {
 }
 
 
+function send_share_button_msg(userId) {
+    // Sends my custom generic template with a web_url button and a share button
+     return new Promise((resolve, reject) => {
+        request({
+                url: "https://graph.facebook.com/v2.6/me/messages",
+                method: "POST",
+                qs: {
+                    access_token: (process.env.fbPageAccessToken || keys.fbPageAccessToken)
+                },
+                json: true,
+                body: {
+                    "recipient": { "id": userId },
+                    "message":
+                        {
+                            "attachment": {
+                                "type": "template",
+                                "payload": {
+                                    "template_type": "generic",
+                                    "elements": [
+                                        {
+                                            "title": "FoodCompositionBot - food analysis by image",
+                                            "image_url": "https://iuriid.github.io/img/fcb_logo.png",
+                                            "buttons": [
+                                                {
+                                                    "type": "element_share",
+                                                    "share_contents": {
+                                                        "attachment": {
+                                                            "type": "template",
+                                                            "payload": {
+                                                                "template_type": "generic",
+                                                                "elements": [
+                                                                    {
+                                                                        "title": "FoodCompositionBot - food analysis by image",
+                                                                        "image_url": "https://iuriid.github.io/img/fcb_logo.png",
+                                                                        "default_action": {
+                                                                            "type": "web_url",
+                                                                            "url": "https://www.facebook.com/Foodcompositionbot-230099550919706/"
+                                                                        },
+                                                                        "buttons": [
+                                                                            {
+                                                                                "type": "web_url",
+                                                                                "url": "https://www.facebook.com/Foodcompositionbot-230099550919706/",
+                                                                                "title": "Try it"
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                }
+            }, (error, response, body) => {
+                if (!error && response.statusCode == 200) {
+                    resolve(true);
+                } else {
+                    console.log(`\nERROR from function send_share_button_msg():\n${error}`);
+                    reject(false);
+                }
+            }
+        )
+    });
+}
+
+
+
+
 function typingOn(userId) {
     // Displays typing sign
     return new Promise((resolve, reject) => {
@@ -1267,7 +1347,7 @@ function typingOn(userId) {
                 url: "https://graph.facebook.com/v2.6/me/messages",
                 method: "POST",
                 qs: {
-                    access_token: keys.fbPageAccessToken
+                    access_token: (process.env.fbPageAccessToken || keys.fbPageAccessToken)
                 },
                 json: true,
                 body: {
@@ -1294,7 +1374,7 @@ function typingOff(userId) {
                 url: "https://graph.facebook.com/v2.6/me/messages",
                 method: "POST",
                 qs: {
-                    access_token: keys.fbPageAccessToken
+                    access_token: (process.env.fbPageAccessToken || keys.fbPageAccessToken)
                 },
                 json: true,
                 body: {
@@ -1327,34 +1407,6 @@ async function typingOnOff(userId, duration) {
     await typingOff(userId);
     return true;
 }
-
-/*
-async function getsUserFirstName(userId) {
-    // Retrieves user's first name
-    return new Promise((resolve, reject) => {
-        request({
-                url: "https://graph.facebook.com/v2.6/me/messages",
-                method: "POST",
-                qs: {
-                    access_token: keys.fbPageAccessToken
-                },
-                json: true,
-                body: {
-                    "recipient": { "id": userId },
-                    "sender_action": "typing_off"
-                }
-            }, (error, response, body) => {
-                if (!error && response.statusCode == 200) {
-                    //console.log(`Sender action "typing_off" for user ${userId} successfully sent`);
-                    resolve(true);
-                } else {
-                    console.log(`\nERROR from function typingOff():\n${error}`);
-                    reject(false);
-                }
-            }
-        )
-    });
-}*/
 
 /*
 // === Testing output ================================================================================================//
