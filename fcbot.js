@@ -4,7 +4,12 @@ const express = require("express");
 const fetch = require("node-fetch");
 const request = require("request");
 const bodyParser = require("body-parser");
-//const keys = require("./keys");
+let keys = {};
+try {
+    keys = require("./keys");
+} catch (error) {
+    console.log('Keys.js file not found');
+}
 //const functions = require(".functions");
 //const variables = require("./variablkeyses");
 
@@ -44,7 +49,7 @@ app.get("/", (req, res) => {
 // Facebook Webhook
 // Used for verification
 app.get("/webhook", function (req, res) {
-    if (req.query["hub.verify_token"] === process.env.fbVerifyToken) {//(process.env.fbVerifyToken || keys.fbVerifyToken)) {
+    if (req.query["hub.verify_token"] === (process.env.fbVerifyToken || keys.fbVerifyToken)) {
         console.log("FoodCompositionBot: Webhook verified");
         res.status(200).send(req.query["hub.challenge"]);
     } else {
@@ -380,8 +385,8 @@ async function getNutrients(food) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "x-app-id": process.env.nutritionixAppID,//(process.env.nutritionixAppID || keys.nutritionixAppID),
-                "x-app-key": process.env.nutritionixAppKey, //(process.env.nutritionixAppKey || keys.nutritionixAppKey),
+                "x-app-id": (process.env.nutritionixAppID || keys.nutritionixAppID),
+                "x-app-key": (process.env.nutritionixAppKey || keys.nutritionixAppKey),
                 "x-remote-user-id": 0
             },
             body: JSON.stringify({query: food})
@@ -948,63 +953,69 @@ function vitaminNumbersToText(vitaminData) {
                 vitKIn100g = 0;
             }
 
-            summary = `${food.charAt(0).toUpperCase() + food.slice(1)} contains approximately (per 100 g):`;
-            if (vitAmcgIn100g || vitAMEIn100g) {
-                summary += "\nVitamin A: ";
-                if (vitAmcgIn100g && !vitAMEIn100g) {
-                    summary += `${vitAmcgIn100g} mcg`;
+            // Foods found that don't contain vitamins or no info on vitamins, for eg., coca-cola
+            if (!vitAmcgIn100g && !vitAMEIn100g && !vitB1In100g && !vitB2In100g && !vitB5In100g && !vitB6In100g &&
+                !vitB12In100g && !vitCIn100g && !vitDmcgIn100g && !vitDMEIn100g && !vitEIn100g && !vitKIn100g) {
+                summary = `${food.charAt(0).toUpperCase() + food.slice(1)} doesn't contain vitamins or I failed to find information about them`;
+            } else {
+                summary = `${food.charAt(0).toUpperCase() + food.slice(1)} contains approximately (per 100 g):`;
+                if (vitAmcgIn100g || vitAMEIn100g) {
+                    summary += "\nVitamin A: ";
+                    if (vitAmcgIn100g && !vitAMEIn100g) {
+                        summary += `${vitAmcgIn100g} mcg`;
+                    }
+                    if (vitAMEIn100g && !vitAmcgIn100g) {
+                        summary += `${vitAMEIn100g} IE`;
+                    }
+                    if (vitAMEIn100g && vitAmcgIn100g) {
+                        summary += `${vitAmcgIn100g} mcg (${vitAMEIn100g} IE)`;
+                    }
                 }
-                if (vitAMEIn100g && !vitAmcgIn100g) {
-                    summary += `${vitAMEIn100g} IE`;
+
+                if (vitB1In100g) {
+                    summary += `\nVitamin B1: ${vitB1In100g} mg`;
                 }
-                if (vitAMEIn100g && vitAmcgIn100g) {
-                    summary += `${vitAmcgIn100g} mcg (${vitAMEIn100g} IE)`;
+
+                if (vitB2In100g) {
+                    summary += `\nVitamin B2: ${vitB2In100g} mg`;
                 }
-            }
 
-            if (vitB1In100g) {
-                summary += `\nVitamin B1: ${vitB1In100g} mg`;
-            }
-
-            if (vitB2In100g) {
-                summary += `\nVitamin B2: ${vitB2In100g} mg`;
-            }
-
-            if (vitB5In100g) {
-                summary += `\nVitamin B5: ${vitB5In100g} mg`;
-            }
-
-            if (vitB6In100g) {
-                summary += `\nVitamin B6: ${vitB6In100g} mg`;
-            }
-
-            if (vitB12In100g) {
-                summary += `\nVitamin B12: ${vitB12In100g} mcg`;
-            }
-
-            if (vitCIn100g) {
-                summary += `\nVitamin C: ${vitCIn100g} mcg`;
-            }
-
-            if (vitDmcgIn100g || vitDMEIn100g) {
-                summary += "\nVitamin D: ";
-                if (vitDmcgIn100g && !vitDMEIn100g) {
-                    summary += `${vitDmcgIn100g} mcg`;
+                if (vitB5In100g) {
+                    summary += `\nVitamin B5: ${vitB5In100g} mg`;
                 }
-                if (vitDMEIn100g && !vitDmcgIn100g) {
-                    summary += `${vitDMEIn100g} IE`;
-                }
-                if (vitDMEIn100g && vitDmcgIn100g) {
-                    summary += `${vitDmcgIn100g} mcg (${vitDMEIn100g} IE)`;
-                }
-            }
 
-            if (vitEIn100g) {
-                summary += `\nVitamin E: ${vitEIn100g} mg`;
-            }
+                if (vitB6In100g) {
+                    summary += `\nVitamin B6: ${vitB6In100g} mg`;
+                }
 
-            if (vitKIn100g) {
-                summary += `\nVitamin K: ${vitKIn100g} mcg`;
+                if (vitB12In100g) {
+                    summary += `\nVitamin B12: ${vitB12In100g} mcg`;
+                }
+
+                if (vitCIn100g) {
+                    summary += `\nVitamin C: ${vitCIn100g} mcg`;
+                }
+
+                if (vitDmcgIn100g || vitDMEIn100g) {
+                    summary += "\nVitamin D: ";
+                    if (vitDmcgIn100g && !vitDMEIn100g) {
+                        summary += `${vitDmcgIn100g} mcg`;
+                    }
+                    if (vitDMEIn100g && !vitDmcgIn100g) {
+                        summary += `${vitDMEIn100g} IE`;
+                    }
+                    if (vitDMEIn100g && vitDmcgIn100g) {
+                        summary += `${vitDmcgIn100g} mcg (${vitDMEIn100g} IE)`;
+                    }
+                }
+
+                if (vitEIn100g) {
+                    summary += `\nVitamin E: ${vitEIn100g} mg`;
+                }
+
+                if (vitKIn100g) {
+                    summary += `\nVitamin K: ${vitKIn100g} mcg`;
+                }
             }
 
             return {
@@ -1110,7 +1121,7 @@ function googleVisionBase64(imgBase64) {
                 url: "https://vision.googleapis.com/v1/images:annotate",
                 method: "POST",
                 qs: {
-                    key: process.env.googleVisionApiKey//(process.env.googleVisionApiKey || keys.googleVisionApiKey)
+                    key: (process.env.googleVisionApiKey || keys.googleVisionApiKey)
                 },
                 json: true,
                 body: {
@@ -1152,7 +1163,7 @@ function googleVisionUrl(imgUrl) {
                 url: "https://vision.googleapis.com/v1/images:annotate",
                 method: "POST",
                 qs: {
-                    key: process.env.googleVisionApiKey//(process.env.googleVisionApiKey || keys.googleVisionApiKey)
+                    key: (process.env.googleVisionApiKey || keys.googleVisionApiKey)
                 },
                 json: true,
                 body: {
@@ -1205,7 +1216,7 @@ function send_text_message(userId, text) {
                 url: "https://graph.facebook.com/v2.6/me/messages",
                 method: "POST",
                 qs: {
-                    access_token: process.env.fbPageAccessToken//(process.env.fbPageAccessToken || keys.fbPageAccessToken)
+                    access_token: (process.env.fbPageAccessToken || keys.fbPageAccessToken)
                 },
                 json: true,
                 body: {
@@ -1245,7 +1256,7 @@ function send_quick_replies_msg(userId, title, buttons) {
                 url: "https://graph.facebook.com/v2.6/me/messages",
                 method: "POST",
                 qs: {
-                    access_token: process.env.fbPageAccessToken//(process.env.fbPageAccessToken || keys.fbPageAccessToken)
+                    access_token: (process.env.fbPageAccessToken || keys.fbPageAccessToken)
                 },
                 json: true,
                 body: {
@@ -1276,7 +1287,7 @@ function send_share_button_msg(userId) {
                 url: "https://graph.facebook.com/v2.6/me/messages",
                 method: "POST",
                 qs: {
-                    access_token: process.env.fbPageAccessToken//(process.env.fbPageAccessToken || keys.fbPageAccessToken)
+                    access_token: (process.env.fbPageAccessToken || keys.fbPageAccessToken)
                 },
                 json: true,
                 body: {
@@ -1347,7 +1358,7 @@ function typingOn(userId) {
                 url: "https://graph.facebook.com/v2.6/me/messages",
                 method: "POST",
                 qs: {
-                    access_token: process.env.fbPageAccessToken//(process.env.fbPageAccessToken || keys.fbPageAccessToken)
+                    access_token: (process.env.fbPageAccessToken || keys.fbPageAccessToken)
                 },
                 json: true,
                 body: {
@@ -1375,7 +1386,7 @@ function typingOff(userId) {
                 url: "https://graph.facebook.com/v2.6/me/messages",
                 method: "POST",
                 qs: {
-                    access_token: process.env.fbPageAccessToken//(process.env.fbPageAccessToken || keys.fbPageAccessToken)
+                    access_token: (process.env.fbPageAccessToken || keys.fbPageAccessToken)
                 },
                 json: true,
                 body: {
